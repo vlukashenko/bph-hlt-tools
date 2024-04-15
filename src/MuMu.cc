@@ -11,7 +11,7 @@
 //=================================================
 
 // user include files
-#include "myAnalyzers/bph-hlt-tool/src/MuMu.h"
+#include "myAnalyzers/bph-hlt-tools/src/MuMu.h"
 
 #include "FWCore/Common/interface/TriggerNames.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
