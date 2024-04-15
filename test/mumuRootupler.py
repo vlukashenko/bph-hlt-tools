@@ -10,9 +10,20 @@ L1_seeds = ['L1_DoubleMu0er1p4_SQ_OS_dEta_Max1p2',
                                 'L1_DoubleMu0er1p5_SQ_OS_dR_Max1p4',
                                 'L1_DoubleMu4p5_SQ_OS_dR_Max1p2',
                                 'L1_DoubleMu4_SQ_OS_dR_Max1p2', 
-                                'L1_DoubleMu3er2p0_SQ_OS_dR_Max1p4']
+                                'L1_DoubleMu3er2p0_SQ_OS_dR_Max1p4',
+                                
+                                'L1_DoubleMu0er1p5_SQ_dR_Max1p4',
+                                'L1_DoubleMu0er2p0_SQ_dEta_Max1p6',
+                                'L1_DoubleMu0er2p0_SQ_dEta_Max1p5',
+
+                                'L1_SingleMu10_SQ14_BMTF',
+                                'L1_SingleMu11_SQ14_BMTF',
+                                'L1_SingleMu0_BMTF',
+
+                                ]
 
 HLT_Paths=[ "HLT_DoubleMu4_3_LowMass_v",
+            "HLT_DoubleMu4_3_LowMass_SS_v",
             "HLT_DoubleMu4_LowMass_Displaced_v",
             "HLT_DoubleMu4_MuMuTrk_Displaced_v",
             "HLT_DoubleMu4_3_Bs_v",
@@ -25,6 +36,12 @@ HLT_Paths=[ "HLT_DoubleMu4_3_LowMass_v",
             "HLT_Mu0_L1DoubleMu_v",
             "HLT_Mu3_PFJet40_v",
             "HLT_Mu15_v",
+            
+            "HLT_Mu0_Barrel_v2",
+            "HLT_Mu0_Barrel_L1HP10_v",
+            "HLT_Mu0_Barrel_L1HP11_v",
+            "HLT_Mu9_Barrel_L1HP10_IP6_v",
+            "HLT_Mu10_Barrel_L1HP11_IP6_v",
             #"HLT_DoubleEle5_eta1p22_mMax6_v",
             #"HLT_DoubleEle5p5_eta1p22_mMax6_v",
             #"HLT_DoubleEle6_eta1p22_mMax6_v",
@@ -98,6 +115,8 @@ process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(options.maxE)
 #data_file = "/store/data/Run2022F/Muon/MINIAOD/PromptReco-v1/000/360/335/00000/db3a7d95-2b78-4e72-86e4-8436005406bf.root"
 #data_file  = "/store/data/Run2022F/Muon/MINIAOD/PromptReco-v1/000/360/390/00000/be5c66b6-fea2-48f4-879f-846f6de0e511.root"
 data_file  = "/store/data/Run2024B/ParkingDoubleMuonLowMass0/MINIAOD/PromptReco-v1/000/379/058/00000/d57fe8ca-ccb0-4df9-a027-d6fa9788b51d.root" #2024B
+data_file  = "/store/data/Run2024B/ParkingSingleMuon0/MINIAOD/PromptReco-v1/000/379/252/00000/75e2e99e-80b2-429a-9d60-1e7e4c9682fd.root"
+
 
 if options.isMC:
     data_file = '/store/mc/Run3Summer22EEMiniAODv3/ButoJpsiK_Jpsito2Mu_TuneCP5_13p6TeV_pythia8-evtgen/MINIAODSIM/124X_mcRun3_2022_realistic_postEE_v1-v2/2520000/04f4baff-0d98-4f64-a0e2-0421d62db508.root'
@@ -158,11 +177,12 @@ process.rootuple = cms.EDAnalyzer('MuMu',
                           bMasscut          = cms.vdouble(5.0,6.0),
                           debug = cms.bool(options.debug)        
                           )
-
-file_name = 'Rootuple_MuMu_2024-MiniAOD_Muon.root'
+dataset_name = data_file.split('/')[4][:11]
+file_name = f'Rootuple_DiMu-MiniAOD_{dataset_name}.root'
 if options.isMC:
-    file_name = 'Rootuple_MC_MuMu_2024-MiniAOD.root'
+    file_name = f'Rootuple_MC_DiMu-MiniAOD_{dataset_name}.root'
 
+    
 process.TFileService = cms.Service("TFileService",
        #fileName = cms.string('Rootuple_Butomumu_2023-MiniAOD.root'),
        fileName = cms.string(file_name),
