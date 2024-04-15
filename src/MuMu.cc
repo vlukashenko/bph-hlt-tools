@@ -432,7 +432,7 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if(iMuon1==iMuon2) continue;
 
       //opposite charge 
-      if( (iMuon1->charge())*(iMuon2->charge()) == 1) continue;
+      //if( (iMuon1->charge())*(iMuon2->charge()) == 1) continue;
 
       TrackRef glbTrack1;	  
       TrackRef glbTrack2;	  
