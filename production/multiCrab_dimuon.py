@@ -13,6 +13,9 @@ from CRABClient.ClientExceptions import ClientException
 from http.client import HTTPException #python3
 #from CRABClient.UserUtilities import config
 
+
+_ProductionTag = '_First2024Check_April24_TEST'
+
 def getOptions():
     """
     Parse and return the arguments provided by the user.
@@ -73,7 +76,7 @@ def main():
         
         config.General.requestName = None
         #config.General.workArea = 'TriggerEfficiencies_Try2'
-        config.General.workArea = 'L1_SeedsChange'
+        config.General.workArea = 'BPHTriggerTuples'
         config.General.transferOutputs = True
         config.General.transferLogs = False
 
@@ -133,7 +136,27 @@ def main():
             #'/ParkingDoubleMuonLowMass6/Run2023C-PromptReco-v4/MINIAOD',
             #'/ParkingDoubleMuonLowMass7/Run2023C-PromptReco-v4/MINIAOD',
 
-            '/ParkingDoubleMuonLowMass0/Run2023D-PromptReco-v1/MINIAOD',
+            #'/ParkingDoubleMuonLowMass0/Run2023D-PromptReco-v1/MINIAOD',
+
+
+            # '/ParkingDoubleMuonLowMass0/Run2024B-PromptReco-v1/MINIAOD',
+            # '/ParkingDoubleMuonLowMass1/Run2024B-PromptReco-v1/MINIAOD',
+            # '/ParkingDoubleMuonLowMass2/Run2024B-PromptReco-v1/MINIAOD',
+            '/ParkingDoubleMuonLowMass3/Run2024B-PromptReco-v1/MINIAOD',
+            '/ParkingDoubleMuonLowMass4/Run2024B-PromptReco-v1/MINIAOD',
+            '/ParkingDoubleMuonLowMass5/Run2024B-PromptReco-v1/MINIAOD',
+            '/ParkingDoubleMuonLowMass6/Run2024B-PromptReco-v1/MINIAOD',
+            '/ParkingDoubleMuonLowMass6/Run2024B-PromptReco-v1/MINIAOD',
+
+            # '/ParkingSingleMuon0/Run2024B-PromptReco-v1/MINIAOD',
+            # '/ParkingSingleMuon1/Run2024B-PromptReco-v1/MINIAOD',
+            # '/ParkingSingleMuon2/Run2024B-PromptReco-v1/MINIAOD',
+            '/ParkingSingleMuon3/Run2024B-PromptReco-v1/MINIAOD',
+            '/ParkingSingleMuon4/Run2024B-PromptReco-v1/MINIAOD',
+            '/ParkingSingleMuon5/Run2024B-PromptReco-v1/MINIAOD',
+            '/ParkingSingleMuon6/Run2024B-PromptReco-v1/MINIAOD',
+            '/ParkingSingleMuon7/Run2024B-PromptReco-v1/MINIAOD',
+
         ]
         
         for inDS in inputDatasets:
