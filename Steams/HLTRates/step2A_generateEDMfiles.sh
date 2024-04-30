@@ -28,7 +28,7 @@ sed -i "${line_number}s/.*/$new_line/" "$file"
 
 mkdir -p $home/SteamRatesEdmWorkflow/Prod/output
 ./cmsCondorData.py run_steamflow_cfg.py\
-									 $home\
-						       $home/SteamRatesEdmWorkflow/Prod/output\
-						       -n 1 -q longlunch\
-									 -p /afs/cern.ch/user/h/hcrottel/private/x509up_u134345
+									$home\
+						       		$home/SteamRatesEdmWorkflow/Prod/output\
+						       		-n 1 -q longlunch\
+									-p /afs/cern.ch/user/h/hcrottel/private/x509up_u134345
