@@ -34,6 +34,7 @@
 #include "TrackingTools/PatternTools/interface/ClosestApproachInRPhi.h"
 #include "MagneticField/Engine/interface/MagneticField.h"            
 #include "CommonTools/Statistics/interface/ChiSquaredProbability.h"
+#include "RecoVertex/KalmanVertexFit/interface/KalmanVertexFitter.h"
 
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
@@ -151,8 +152,10 @@ private:
   edm::EDGetTokenT<BXVector<l1t::Muon>> l1MuonsToken_;
   //edm::EDGetTokenT<GlobalAlgBlkBxCollection> algInputTag_;
   std::vector<std::string> HLTPaths_;
+  std::vector<std::string> HLTPathsFired_;
   std::vector<std::string> L1Seeds_;
   l1t::L1TGlobalUtil* gtUtil_;
+
 
   bool OnlyBest_;
   bool isMC_;
@@ -177,24 +180,30 @@ private:
   int         mu1_L2_match, mu2_L2_match;
   int         mu1_L3_match, mu2_L3_match;
 
+  int DiMu_mu1_index, DiMu_mu2_index;
+  float mu1_pt, mu1_eta, mu1_phi;
+  float mu2_pt, mu2_eta, mu2_phi;
+  
   Double_t    mu1C2;
   int         mu1NHits, mu1NPHits; 
   Double_t    mu2C2;
   int         mu2NHits, mu2NPHits;
   Double_t    mu1dxy, mu2dxy, mu1dz, mu2dz;
+  Double_t    mu1dxy_beamspot, mu2dxy_beamspot;
+  Double_t    mu1dxy_err, mu2dxy_err;
   Double_t    muon_dca;
 
   std::vector<float> L1mu_pt, L1mu_eta, L1mu_phi, L1mu_etaAtVtx, L1mu_phiAtVtx, L1mu_charge, L1mu_quality;
   std::vector<float> mu_pt, mu_eta, mu_phi, mu_charge;
   std::vector<float> L2mu_pt, L2mu_eta, L2mu_phi;
   std::vector<float> L3mu_pt, L3mu_eta, L3mu_phi;
-  std::vector<int> hltsVector, l1sVector;
+  std::vector<int> hltsVector, l1sVector, hltsVector_fired;
   std::vector<int> mu1_hltsVector, mu2_hltsVector;
 
 
-  int         HLT_Dim25, HLT_JpsiTrk_Bc, HLT_JpsiTk; 
-  int         HLT_DMu4_3_LM;//HLT_DoubleMu4_3_LowMass
-  int         HLT_DMu4_LM_Displaced;//HLT_DoubleMu4_LowMass_Displaced
+  // int         HLT_Dim25, HLT_JpsiTrk_Bc, HLT_JpsiTk; 
+  // int         HLT_DMu4_3_LM;//HLT_DoubleMu4_3_LowMass
+  // int         HLT_DMu4_LM_Displaced;//HLT_DoubleMu4_LowMass_Displaced
 
   bool       mu1soft, mu2soft, mu1tight, mu2tight;  
   bool       mu1PF, mu2PF, mu1loose, mu2loose;  
@@ -204,10 +213,15 @@ private:
   unsigned int    nB;
   unsigned int    nMu;
     
+  Double_t dR_muons;
+  Double_t dz_muons;
   Double_t DiMu_mass,DiMu_mass_err;
   Double_t DiMu_pt, DiMu_eta, DiMu_phi;
   Double_t DiMu_mu1_pt, DiMu_mu1_eta, DiMu_mu1_phi;
   Double_t DiMu_mu2_pt, DiMu_mu2_eta, DiMu_mu2_phi;
+
+  Double_t L3_mu1_pt, L3_mu1_eta, L3_mu1_phi;
+  Double_t L3_mu2_pt, L3_mu2_eta, L3_mu2_phi;
   //Double_t DiMu_mu1_charge, DiMu_mu2_charge;
 
   // Double_t       B_mass, B_px, B_py, B_pz, B_charge;
@@ -234,6 +248,12 @@ private:
   Double_t      DiMu_DecayVtxXYE, DiMu_DecayVtxXZE, DiMu_DecayVtxYZE;
   Double_t      lxy, lxyerr;
   Double_t      lxy_pv, lxy_pv_err;
+  Double_t      lxy_hlt, lxyerr_hlt;
+  Double_t      cosAlpha, cosAlpha_hlt;
+
+  Double_t      dR_muon1_L1, dR_muon2_L1;
+  Double_t      dR_muon1_L2, dR_muon2_L2;
+  Double_t      dR_muon1_L3, dR_muon2_L3;
 
   UInt_t  run;
   ULong64_t event;

@@ -53,6 +53,7 @@ MuMu::MuMu(const edm::ParameterSet& iConfig)
   algInputTag_(consumes<GlobalAlgBlkBxCollection>(iConfig.getParameter<edm::InputTag>("algInputTag"))),
   l1MuonsToken_(consumes<BXVector<l1t::Muon>>(iConfig.getParameter<edm::InputTag>("l1Muons"))),
   HLTPaths_(iConfig.getParameter<std::vector<std::string>>("HLTPaths")),
+  HLTPathsFired_(iConfig.getParameter<std::vector<std::string>>("HLTPathsFired")),
   L1Seeds_(iConfig.getParameter<std::vector<std::string>>("L1Seeds")),  
   gtUtil_( new l1t::L1TGlobalUtil( iConfig, consumesCollector(), *this, iConfig.getParameter<edm::InputTag>("algInputTag"), iConfig.getParameter<edm::InputTag>("algInputTag"), l1t::UseEventSetupIn::RunAndEvent  )),
   OnlyBest_(iConfig.getParameter<bool>("OnlyBest")),
@@ -72,9 +73,18 @@ MuMu::MuMu(const edm::ParameterSet& iConfig)
   mu1_L1_match(0), mu2_L1_match(0),
   mu1_L2_match(0), mu2_L2_match(0),
   mu1_L3_match(0), mu2_L3_match(0),
+
+  DiMu_mu1_index(0),DiMu_mu2_index(0),
+  
+  mu1_pt(0), mu1_eta(0), mu1_phi(0),
+  mu2_pt(0), mu2_eta(0), mu2_phi(0),
+  
+
   mu1C2(0), mu1NHits(0), mu1NPHits(0),
   mu2C2(0), mu2NHits(0), mu2NPHits(0),
   mu1dxy(0), mu2dxy(0), mu1dz(0), mu2dz(0),
+  mu1dxy_beamspot(0), mu2dxy_beamspot(0), 
+  mu1dxy_err(0), mu2dxy_err(0),
   muon_dca(0),
 
   
@@ -85,11 +95,12 @@ MuMu::MuMu(const edm::ParameterSet& iConfig)
 
   hltsVector(HLTPaths_.size()),
   l1sVector(L1Seeds_.size()),
+  hltsVector_fired(HLTPathsFired_.size()),
   mu1_hltsVector(HLTPaths_.size()),
   mu2_hltsVector(HLTPaths_.size()),
 
-  HLT_Dim25(0), HLT_JpsiTrk_Bc(0), HLT_JpsiTk(0),
-  HLT_DMu4_3_LM(0), HLT_DMu4_LM_Displaced(0),
+  // HLT_Dim25(0), HLT_JpsiTrk_Bc(0), HLT_JpsiTk(0),
+  // HLT_DMu4_3_LM(0), HLT_DMu4_LM_Displaced(0),
   
   mu1soft(0), mu2soft(0), mu1tight(0), mu2tight(0), 
   mu1PF(0), mu2PF(0), mu1loose(0), mu2loose(0),
@@ -102,10 +113,15 @@ MuMu::MuMu(const edm::ParameterSet& iConfig)
   //B_k_px(0), B_k_py(0), B_k_pz(0), B_k_charge1(0),
   //B_k_px_track(0), B_k_py_track(0), B_k_pz_track(0),
   
+  dR_muons(0),
+  dz_muons(0),
   DiMu_mass(0), DiMu_mass_err(0), 
   DiMu_pt(0), DiMu_eta(0), DiMu_phi(0),
   DiMu_mu1_pt(0), DiMu_mu1_eta(0), DiMu_mu1_phi(0), 
   DiMu_mu2_pt(0), DiMu_mu2_eta(0), DiMu_mu2_phi(0), 
+
+  L3_mu1_pt(0), L3_mu1_eta(0), L3_mu1_phi(0), 
+  L3_mu2_pt(0), L3_mu2_eta(0), L3_mu2_phi(0), 
 
   // Primary Vertex (PV)
   nVtx(0),
@@ -120,7 +136,15 @@ MuMu::MuMu(const edm::ParameterSet& iConfig)
   DiMu_DecayVtxXE(0),    DiMu_DecayVtxYE(0),    DiMu_DecayVtxZE(0),
   DiMu_DecayVtxXYE(0),   DiMu_DecayVtxXZE(0),   DiMu_DecayVtxYZE(0),
 
-  lxy(0), lxyerr(0), lxy_pv(0), lxy_pv_err(0),
+  lxy(0), lxyerr(0), lxy_pv(0), lxy_pv_err(0), lxy_hlt(0), lxyerr_hlt(0),
+  cosAlpha(0), cosAlpha_hlt(0),
+
+  dR_muon1_L1(-1),
+  dR_muon2_L1(-1),
+  dR_muon1_L2(-1),
+  dR_muon2_L2(-1),
+  dR_muon1_L3(-1),
+  dR_muon2_L3(-1),
 
   run(0), event(0),
   lumiblock(0),
@@ -334,6 +358,7 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   mu1_hltsVector.resize( HLTPaths_.size(), 0);
   mu2_hltsVector.resize( HLTPaths_.size(), 0);
   l1sVector.resize( L1Seeds_.size(), 0);
+  hltsVector_fired.resize( HLTPathsFired_.size(), 0);
 
   //Unpack trigger info
   edm::Handle<edm::TriggerResults> triggerBits;
@@ -345,10 +370,12 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     for (unsigned int i = 0; i  < triggerBits->size(); i++) {
       std::string iName = names.triggerName(i);
       if (triggerBits->accept(i)) {
-        for(std::size_t i = 0; i < HLTPaths_.size(); ++i) {
+        for(std::size_t i = 0; i < HLTPaths_.size(); ++i) {          
           if (iName.find(HLTPaths_[i]) != std::string::npos) hltsVector[i] = 1;
         }
-
+        for(std::size_t i = 0; i < HLTPathsFired_.size(); ++i) {      
+          if (iName.find(HLTPathsFired_[i]) != std::string::npos) hltsVector_fired[i] = 1;
+        }
       }
   }
 
@@ -427,18 +454,29 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   unsigned int nMu_tmp = thePATMuonHandle->size();
   nMu = nMu_tmp;
 
+  int index_mu1 = 0;
+  int index_mu2 = 0;
   for(View<pat::Muon>::const_iterator iMuon1 = thePATMuonHandle->begin(); iMuon1 != thePATMuonHandle->end(); ++iMuon1)  {     
+    index_mu1++;
+    index_mu2 = index_mu1;
     for(View<pat::Muon>::const_iterator iMuon2 = iMuon1+1; iMuon2 != thePATMuonHandle->end(); ++iMuon2)  {
+      index_mu2++;
       if(iMuon1==iMuon2) continue;
 
       //opposite charge 
       //if( (iMuon1->charge())*(iMuon2->charge()) == 1) continue;
 
+      dR_muons = reco::deltaR2(iMuon1->eta(),iMuon1->phi(), 
+                              iMuon2->eta(), iMuon2->phi());
+                            
       TrackRef glbTrack1;	  
       TrackRef glbTrack2;	  
       
       glbTrack1 = iMuon1->track();
       glbTrack2 = iMuon2->track();
+
+      //dz_muons = glbTrack1.z() - glbTrack2.z();   
+      dz_muons = iMuon2->vz() - iMuon1->vz();
 
       if( glbTrack1.isNull() || glbTrack2.isNull() ) 
          {
@@ -556,6 +594,9 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       DiMu_mu2_eta = mu2cand_state.globalMomentum().eta();
       DiMu_mu2_phi = mu2cand_state.globalMomentum().phi();
 
+      DiMu_mu1_index = index_mu1;
+      DiMu_mu2_index = index_mu2;
+
       /*B_J_pt2 = Jp2vec.perp();
       B_J_px2 = psiMu2KP.momentum().x();
       B_J_py2 = psiMu2KP.momentum().y();
@@ -588,6 +629,9 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                                          0);
       lxy = displacementFromBeamspot.perp();
       lxyerr = sqrt(verr.rerr(displacementFromBeamspot));
+      math::XYZVector pperp( psi_vFit_noMC->currentState().globalMomentum().x(),  psi_vFit_noMC->currentState().globalMomentum().y(), 0.);
+      reco::Vertex::Point vperp(displacementFromBeamspot.x(), displacementFromBeamspot.y(), 0.);
+      cosAlpha = vperp.Dot(pperp) / (vperp.R() * pperp.R());
 
 
       /// /// lxy aa way
@@ -610,7 +654,6 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
 
-
       if (debug_) std::cout << " Trigger Matching " << std::endl;
       // ********************* muon-trigger-machint ****************
 
@@ -622,20 +665,20 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         if (muon2->triggerObjectMatchByPath((HLTPaths_[i]+"*").c_str())!=nullptr) mu2_hltsVector[i] = 1;
       }
 
-      int HLT_Dim25_tmp = 0, HLT_JpsiTk_tmp = 0,  HLT_JpsiTrk_Bc_tmp = 0, HLT_DMu4_3_LM_tmp = 0, HLT_DMu4_LM_Displaced_tmp = 0; 
+      //int HLT_Dim25_tmp = 0, HLT_JpsiTk_tmp = 0,  HLT_JpsiTrk_Bc_tmp = 0, HLT_DMu4_3_LM_tmp = 0, HLT_DMu4_LM_Displaced_tmp = 0; 
 
-      if(muon1->triggerObjectMatchByPath("HLT_Dimuon25_Jpsi_v*")!=nullptr && muon2->triggerObjectMatchByPath("HLT_Dimuon25_Jpsi_v*")!=nullptr) HLT_Dim25_tmp = 1;
-      if(muon1->triggerObjectMatchByPath("HLT_DoubleMu4_MuMuTrk_Displaced_v*")!=nullptr && muon2->triggerObjectMatchByPath("HLT_DoubleMu4_MuMuTrk_Displaced_v*")!=nullptr) HLT_JpsiTk_tmp = 1;
-      if(muon1->triggerObjectMatchByPath("HLT_DoubleMu4_JpsiTrk_Bc_v*")!=nullptr && muon2->triggerObjectMatchByPath("HLT_DoubleMu4_JpsiTrk_Bc_v*")!=nullptr) HLT_JpsiTrk_Bc_tmp = 1;
-      if(muon1->triggerObjectMatchByPath("HLT_DoubleMu4_3_LowMass_v*")!=nullptr && muon2->triggerObjectMatchByPath("HLT_DoubleMu4_3_LowMass_v*")!=nullptr) HLT_DMu4_3_LM_tmp = 1;
-      if(muon1->triggerObjectMatchByPath("HLT_DoubleMu4_LowMass_Displaced_v*")!=nullptr && muon2->triggerObjectMatchByPath("HLT_DoubleMu4_LowMass_Displaced_v*")!=nullptr) HLT_DMu4_LM_Displaced_tmp = 1;
+      // if(muon1->triggerObjectMatchByPath("HLT_Dimuon25_Jpsi_v*")!=nullptr && muon2->triggerObjectMatchByPath("HLT_Dimuon25_Jpsi_v*")!=nullptr) HLT_Dim25_tmp = 1;
+      // if(muon1->triggerObjectMatchByPath("HLT_DoubleMu4_MuMuTrk_Displaced_v*")!=nullptr && muon2->triggerObjectMatchByPath("HLT_DoubleMu4_MuMuTrk_Displaced_v*")!=nullptr) HLT_JpsiTk_tmp = 1;
+      // if(muon1->triggerObjectMatchByPath("HLT_DoubleMu4_JpsiTrk_Bc_v*")!=nullptr && muon2->triggerObjectMatchByPath("HLT_DoubleMu4_JpsiTrk_Bc_v*")!=nullptr) HLT_JpsiTrk_Bc_tmp = 1;
+      // if(muon1->triggerObjectMatchByPath("HLT_DoubleMu4_3_LowMass_v*")!=nullptr && muon2->triggerObjectMatchByPath("HLT_DoubleMu4_3_LowMass_v*")!=nullptr) HLT_DMu4_3_LM_tmp = 1;
+      // if(muon1->triggerObjectMatchByPath("HLT_DoubleMu4_LowMass_Displaced_v*")!=nullptr && muon2->triggerObjectMatchByPath("HLT_DoubleMu4_LowMass_Displaced_v*")!=nullptr) HLT_DMu4_LM_Displaced_tmp = 1;
 
 
-      HLT_Dim25 =  HLT_Dim25_tmp ;	       
-      HLT_JpsiTk =  HLT_JpsiTk_tmp ;
-      HLT_JpsiTrk_Bc =  HLT_JpsiTrk_Bc_tmp ;
-      HLT_DMu4_3_LM =  HLT_DMu4_3_LM_tmp ;
-      HLT_DMu4_LM_Displaced =  HLT_DMu4_LM_Displaced_tmp ;
+      // HLT_Dim25 =  HLT_Dim25_tmp ;	       
+      // HLT_JpsiTk =  HLT_JpsiTk_tmp ;
+      // HLT_JpsiTrk_Bc =  HLT_JpsiTrk_Bc_tmp ;
+      // HLT_DMu4_3_LM =  HLT_DMu4_3_LM_tmp ;
+      // HLT_DMu4_LM_Displaced =  HLT_DMu4_LM_Displaced_tmp ;
 
       if (debug_) std::cout << " L1  Matching " << std::endl;
       // ************ l1, l2, l3 ************ 
@@ -645,15 +688,32 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       mu1_L1_match = 0;
       mu2_L1_match = 0;
       for (auto itr = gmuons->begin(0); itr != gmuons->end(0); ++itr) {
-        dR2_muon1 = reco::deltaR2(iMuon1->eta(),iMuon1->phi(), 
-                                  itr->eta(), itr->phi());                                
-        if (dR2_muon1 < dR2_threshold) mu1_L1_match=1; 
 
-        dR2_muon2 = reco::deltaR2(iMuon2->eta(),iMuon2->phi(), 
-                                  itr->eta(), itr->phi());
-        if (dR2_muon2 < dR2_threshold) mu2_L1_match=1;
+        if (iMuon1->charge()==itr->charge()) {
+            dR2_muon1 = reco::deltaR2(iMuon1->eta(),iMuon1->phi(), 
+                                      itr->eta(), itr->phi());                                
+            if (dR2_muon1 < dR2_threshold) {
+                mu1_L1_match=1;
+                if( (dR_muon1_L1==-1) || (dR_muon1_L1>sqrt(dR2_muon1)) ) {
+                  dR_muon1_L1 = sqrt(dR2_muon1);
+                }
+            }
+        }
 
-        if (mu1_L1_match==1 && mu2_L1_match==1) break;
+
+        if (iMuon2->charge()==itr->charge()) {
+          dR2_muon2 = reco::deltaR2(iMuon2->eta(),iMuon2->phi(), 
+                                    itr->eta(), itr->phi());
+          //if (dR2_muon2 < dR2_threshold) mu2_L1_match=1;
+          if (dR2_muon2 < dR2_threshold) {
+              mu2_L1_match=1;
+              if( (dR_muon2_L1==-1) || (dR_muon2_L1>sqrt(dR2_muon2))  ){
+                dR_muon2_L1 = sqrt(dR2_muon2);
+              }
+          }
+        }
+
+        //if (mu1_L1_match==1 && mu2_L1_match==1) break;
       }
       
 
@@ -663,9 +723,12 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       mu1_L3_match = 0;
       mu2_L3_match = 0;
 
+      pat::TriggerObjectStandAlone muon1_trgobj, muon2_trgobj;
+
       dR2_threshold = 0.1 * 0.1;
       std::string hltMuColl_L2 = "hltL2MuonCandidates";
       std::string hltMuColl_L3 = "hltIterL3MuonCandidates";
+
       for (pat::TriggerObjectStandAlone obj : *triggerCollection) {
 
         if( obj.hasCollection(hltMuColl_L2) ) {
@@ -677,17 +740,116 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                                   obj.eta(), obj.phi());
           if (dR2_muon1 < dR2_threshold) mu2_L2_match=1; 
         }
+      }
 
-
+      dR2_threshold = 0.1 * 0.1;
+      for (pat::TriggerObjectStandAlone obj : *triggerCollection) {      
+        
         if( obj.hasCollection(hltMuColl_L3) ) {
+
           dR2_muon1 = reco::deltaR2(iMuon1->eta(),iMuon1->phi(), 
                                     obj.eta(), obj.phi());                                
-          if (dR2_muon1 < dR2_threshold) mu1_L3_match=1; 
+          if (dR2_muon1 < dR2_threshold) {
+            dR2_threshold = dR2_muon1;
+            mu1_L3_match = 1; 
+            muon1_trgobj = obj;
+            dR_muon1_L3 = sqrt(dR2_muon1);
+          }          
+        }
+      }
 
+      dR2_threshold = 0.1 * 0.1;
+      for (pat::TriggerObjectStandAlone obj : *triggerCollection) {
+        
+        if( obj.hasCollection(hltMuColl_L3) ) {      
           dR2_muon2 = reco::deltaR2(iMuon2->eta(),iMuon2->phi(), 
                                   obj.eta(), obj.phi());
-          if (dR2_muon1 < dR2_threshold) mu2_L3_match=1; 
+          if ((dR2_muon2 < dR2_threshold) && (muon1_trgobj.pt()!=obj.pt())){
+            dR2_threshold = dR2_muon2;
+            mu2_L3_match=1;
+            muon2_trgobj = obj;
+            dR_muon2_L3 = sqrt(dR2_muon2);
+          }
         }
+      }
+             
+      if ( mu1_L3_match==1){
+            L3_mu1_pt = muon1_trgobj.pt();
+            L3_mu1_eta = muon1_trgobj.eta();
+            L3_mu1_phi = muon1_trgobj.phi();
+        }
+      
+      if ( mu2_L3_match==1){
+            L3_mu2_pt  = muon2_trgobj.pt();
+            L3_mu2_eta = muon2_trgobj.eta();
+            L3_mu2_phi = muon2_trgobj.phi();
+      }
+
+
+      
+      if ( (mu2_L3_match+mu1_L3_match==2) && muon1_trgobj.pt()!=muon2_trgobj.pt()){
+            // if(muon1_trgobj.pt()==muon2_trgobj.pt()) {
+            //   std::cout << "Same l3 muon!"<< std::endl;
+            //   continue;
+            // 
+
+            reco::TrackRef tk1 = muon1_trgobj.get<reco::TrackRef>();
+            reco::TrackRef tk2 = muon2_trgobj.get<reco::TrackRef>();
+            bool tk1_ok = tk1.isNonnull() && tk1.isAvailable();
+            bool tk2_ok = tk2.isNonnull() && tk2.isAvailable();
+            if (tk1_ok && tk2_ok){
+
+              std::cout << "Track refs!"<< std::endl;
+
+              Particle::LorentzVector p, p1, p2;
+              double e1, e2;
+              e1 = sqrt(muon1_trgobj.momentum().Mag2() + 0.106);
+              e2 = sqrt(muon2_trgobj.momentum().Mag2() + 0.106);
+              p1 = Particle::LorentzVector(muon1_trgobj.px(), muon1_trgobj.py(), muon1_trgobj.pz(), e1);
+              p2 = Particle::LorentzVector(muon2_trgobj.px(), muon2_trgobj.py(), muon2_trgobj.pz(), e2);
+              p = p1 + p2;            
+              math::XYZVector pperp_hlt(muon1_trgobj.px() + muon2_trgobj.px(), muon1_trgobj.py() + muon2_trgobj.py(), 0.);
+              vector<reco::TransientTrack> t_tks;
+              reco::TransientTrack ttkp1 = (*theB).build(&tk1);
+              reco::TransientTrack ttkp2 = (*theB).build(&tk2);
+              std::cout << "Transient tracks!"<< std::endl;
+              if (ttkp1.isValid() && ttkp2.isValid()){
+                t_tks.push_back(ttkp1);
+                t_tks.push_back(ttkp2);
+          
+                KalmanVertexFitter kvf;
+                TransientVertex tv = kvf.vertex(t_tks);
+
+                if (tv.isValid()) {
+
+                  reco::Vertex displacedVertex = tv;
+
+                  const reco::Vertex::Point& vpoint = displacedVertex.position();
+                  //translate to global point, should be improved
+                  GlobalPoint secondaryVertex(vpoint.x(), vpoint.y(), vpoint.z());
+
+                  reco::Vertex::Error verr_Kalman = displacedVertex.error();
+                  // translate to global error, should be improved
+                  GlobalError err(verr_Kalman.At(0, 0), verr_Kalman.At(1, 0), verr_Kalman.At(1, 1), verr_Kalman.At(2, 0), verr_Kalman.At(2, 1), verr_Kalman.At(2, 2));
+
+                  GlobalPoint displacementFromBeamspot(-1 * ((vertexBeamSpot.x0() - secondaryVertex.x()) +
+                                                            (secondaryVertex.z() - vertexBeamSpot.z0()) * vertexBeamSpot.dxdz()),
+                                                      -1 * ((vertexBeamSpot.y0() - secondaryVertex.y()) +
+                                                            (secondaryVertex.z() - vertexBeamSpot.z0()) * vertexBeamSpot.dydz()),
+                                                      0);
+
+                  lxy_hlt = displacementFromBeamspot.perp();
+                  lxyerr_hlt = sqrt(err.rerr(displacementFromBeamspot));
+
+                  //calculate the angle between the decay length and the mumu momentum
+                  reco::Vertex::Point vperp_hlt(displacementFromBeamspot.x(), displacementFromBeamspot.y(), 0.);
+
+                  cosAlpha_hlt = vperp_hlt.Dot(pperp_hlt) / (vperp_hlt.R() * pperp_hlt.R());
+      
+                }             
+              }              
+            
+            }
         
       }
 
@@ -717,8 +879,19 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       if (debug_) std::cout << " Muons IDs and properties " << std::endl;
       // ************ Different muons Id, and other properties  ****************
+      
       mu1_charge = iMuon1->charge() ;
       mu2_charge = iMuon2->charge() ; 
+
+      mu1_pt = iMuon1->pt() ;
+      mu2_pt = iMuon2->pt() ; 
+
+      mu1_eta = iMuon1->eta() ;
+      mu2_eta = iMuon2->eta() ; 
+
+      mu1_phi = iMuon1->phi() ;
+      mu2_phi = iMuon2->phi() ; 
+
       mu1soft    = iMuon1->isSoftMuon(bestVtx) ;
       mu2soft    = iMuon2->isSoftMuon(bestVtx) ;
       mu1tight   = iMuon1->isTightMuon(bestVtx) ;
@@ -742,6 +915,13 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       mu2dxy = glbTrack2->dxy(bestVtx.position()) ;// 
       mu1dz = glbTrack1->dz(bestVtx.position()) ;
       mu2dz = glbTrack2->dz(bestVtx.position()) ;
+      
+      mu1dxy_beamspot = glbTrack1->dxy(vertexBeamSpot.position()) ;// 
+      mu2dxy_beamspot = glbTrack2->dxy(vertexBeamSpot.position()) ;// 
+
+      mu1dxy_err = glbTrack1->dxyError() ;// 
+      mu2dxy_err = glbTrack2->dxyError() ;// 
+
       muon_dca = dca;
 
       //fill the tree
@@ -849,11 +1029,18 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    // Initialize the variables
 
    nB = 0; nMu = 0;
-
+   
+   dR_muons = 0;
+   dz_muons = 0; 
 	 DiMu_mass = 0; DiMu_mass_err = 0;
    DiMu_pt = 0;  DiMu_eta = 0;  DiMu_phi = 0;
    DiMu_mu1_pt = 0;  DiMu_mu1_eta = 0;  DiMu_mu1_phi = 0;
    DiMu_mu2_pt = 0;  DiMu_mu2_eta = 0;  DiMu_mu2_phi = 0;
+
+   L3_mu1_pt = 0; L3_mu1_eta = 0; L3_mu1_phi = 0;
+   L3_mu2_pt = 0; L3_mu2_eta = 0; L3_mu2_phi = 0;
+
+   DiMu_mu1_index = 0;  DiMu_mu2_index = 0;
 
    DiMu_chi2 = 0; 
    DiMu_Prob = 0;
@@ -863,6 +1050,7 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    DiMu_DecayVtxXYE = 0;   DiMu_DecayVtxXZE = 0;   DiMu_DecayVtxYZE = 0;
    lxy = 0; lxyerr = 0;
    lxy_pv = 0; lxy_pv_err = 0;
+   lxy_hlt = 0; lxyerr_hlt = 0;
 
    nVtx = 0;
    priVtxX = 0;     priVtxY = 0;     priVtxZ = 0; 
@@ -873,22 +1061,33 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    mu1NHits = 0; mu1NPHits = 0;
    mu2C2 = 0;
    mu2NHits = 0; mu2NPHits = 0;
-   mu1dxy = 0; mu2dxy = 0; mu1dz = 0; mu2dz = 0; muon_dca = 0;
+   mu1dxy = 0; mu2dxy = 0; mu1dz = 0; mu2dz = 0; 
+   mu1dxy_beamspot = 0; mu2dxy_beamspot = 0;
+   mu1dxy_err = 0; mu2dxy_err = 0;
+   muon_dca = 0;
 
-   HLT_Dim25 = 0; HLT_JpsiTrk_Bc = 0; HLT_JpsiTk = 0;
-   HLT_DMu4_3_LM = 0;  HLT_DMu4_LM_Displaced = 0;
+  //  HLT_Dim25 = 0; HLT_JpsiTrk_Bc = 0; HLT_JpsiTk = 0;
+  //  HLT_DMu4_3_LM = 0;  HLT_DMu4_LM_Displaced = 0;
  
    mu1soft = 0; mu2soft = 0; mu1tight = 0; mu2tight = 0;
    mu1PF = 0; mu2PF = 0; mu1loose = 0; mu2loose = 0; 
    mu1Tracker = 0; mu2Tracker = 0; mu1Global = 0; mu2Global = 0;  
 
 
-  mu1_L1_match = 0;
-  mu2_L1_match = 0;
-  mu1_L2_match = 0;
-  mu2_L2_match = 0;
-  mu1_L3_match = 0;
-  mu2_L3_match = 0;
+    mu1_L1_match = 0;
+    mu2_L1_match = 0;
+    mu1_L2_match = 0;
+    mu2_L2_match = 0;
+    mu1_L3_match = 0;
+    mu2_L3_match = 0;
+
+
+    dR_muon1_L1 = -1;
+    dR_muon2_L1 = -1;
+    dR_muon1_L2 = -1;
+    dR_muon2_L2 = -1;
+    dR_muon1_L3 = -1;
+    dR_muon2_L3 = -1;
 
 
    L1mu_pt.clear(); L1mu_eta.clear(); L1mu_phi.clear();
@@ -910,7 +1109,9 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     mu1_hltsVector[i] = 0;
     mu2_hltsVector[i] = 0;
    }
-
+  for(std::size_t i = 0; i < HLTPathsFired_.size(); ++i) {    
+    hltsVector_fired[i] = 0;
+   }
    for(std::size_t i = 0; i < L1Seeds_.size(); ++i) l1sVector[i] = 0;
 
 }
@@ -982,6 +1183,8 @@ MuMu::beginJob()
   tree_->Branch("nMu",&nMu,"nMu/i");
 
   //tree_->Branch("B_charge", &B_charge);
+  tree_->Branch("dR_muons", &dR_muons);
+  tree_->Branch("dz_muons", &dz_muons);
   tree_->Branch("DiMu_mass", &DiMu_mass);
   tree_->Branch("DiMu_pt" , &DiMu_pt);
   tree_->Branch("DiMu_eta", &DiMu_eta);
@@ -1004,6 +1207,9 @@ MuMu::beginJob()
   tree_->Branch("B_chi2",    &B_chi2);
   tree_->Branch("B_J_chi2",  &B_J_chi2);*/
 
+  tree_->Branch("DiMu_mu1_index",  &DiMu_mu1_index);
+  tree_->Branch("DiMu_mu2_index",  &DiMu_mu2_index);
+
   tree_->Branch("DiMu_mu1_pt",  &DiMu_mu1_pt);
   tree_->Branch("DiMu_mu1_eta", &DiMu_mu1_eta);
   tree_->Branch("DiMu_mu1_phi", &DiMu_mu1_phi);
@@ -1014,6 +1220,13 @@ MuMu::beginJob()
   tree_->Branch("DiMu_mu2_phi", &DiMu_mu2_phi);
   tree_->Branch("mu2_charge",   &mu2_charge);
 
+  tree_->Branch("L3_mu1_pt",  &L3_mu1_pt);
+  tree_->Branch("L3_mu1_eta", &L3_mu1_eta);
+  tree_->Branch("L3_mu1_phi", &L3_mu1_phi);
+  
+  tree_->Branch("L3_mu2_pt",  &L3_mu2_pt);
+  tree_->Branch("L3_mu2_eta", &L3_mu2_eta);
+  tree_->Branch("L3_mu2_phi", &L3_mu2_phi);
 
   tree_->Branch("DiMu_chi2",    &DiMu_chi2);
   tree_->Branch("DiMu_Prob",  &DiMu_Prob);
@@ -1033,6 +1246,19 @@ MuMu::beginJob()
 
   tree_->Branch("lxy_pv", &lxy_pv);
   tree_->Branch("lxy_pv_err", &lxy_pv_err);
+
+  tree_->Branch("lxy_hlt", &lxy_hlt);
+  tree_->Branch("lxyerr_hlt", &lxyerr_hlt);
+
+  tree_->Branch("cosAlpha", &cosAlpha);
+  tree_->Branch("cosAlpha_hlt", &cosAlpha_hlt);
+
+  tree_->Branch("dR_muon1_L1", &dR_muon1_L1);
+  tree_->Branch("dR_muon2_L1", &dR_muon2_L1);
+  tree_->Branch("dR_muon1_L2", &dR_muon1_L2);
+  tree_->Branch("dR_muon2_L2", &dR_muon2_L2);
+  tree_->Branch("dR_muon1_L3", &dR_muon1_L3);
+  tree_->Branch("dR_muon2_L3", &dR_muon2_L3);
 
   tree_->Branch("priVtxX",  &priVtxX, "priVtxX/D");
   tree_->Branch("priVtxY",  &priVtxY, "priVtxY/D");
@@ -1068,6 +1294,15 @@ MuMu::beginJob()
     
   // *************************
  
+  tree_->Branch("mu1_pt",&mu1_pt);  
+  tree_->Branch("mu2_pt",&mu2_pt);  
+
+  tree_->Branch("mu1_eta",&mu1_eta);  
+  tree_->Branch("mu2_eta",&mu2_eta);  
+
+  tree_->Branch("mu1_phi",&mu1_phi);  
+  tree_->Branch("mu2_phi",&mu2_phi);  
+  
   tree_->Branch("mu1C2",&mu1C2);  
   tree_->Branch("mu1NHits",&mu1NHits);
   tree_->Branch("mu1NPHits",&mu1NPHits);
@@ -1078,6 +1313,12 @@ MuMu::beginJob()
   tree_->Branch("mu2dxy",&mu2dxy);
   tree_->Branch("mu1dz",&mu1dz);
   tree_->Branch("mu2dz",&mu2dz);
+  
+  tree_->Branch("mu1dxy_beamspot",&mu1dxy_beamspot);
+  tree_->Branch("mu2dxy_beamspot",&mu2dxy_beamspot);
+  tree_->Branch("mu1dxy_err",&mu1dxy_err);
+  tree_->Branch("mu2dxy_err",&mu2dxy_err);
+
   tree_->Branch("muon_dca",&muon_dca);
 
   tree_->Branch("mu1_L1_match", &mu1_L1_match);
@@ -1088,11 +1329,11 @@ MuMu::beginJob()
   tree_->Branch("mu2_L2_match", &mu2_L2_match);
   tree_->Branch("mu2_L3_match", &mu2_L3_match);
 
-  tree_->Branch("HLT_Dim25",&HLT_Dim25);
-  tree_->Branch("HLT_JpsiTrk_Bc",&HLT_JpsiTrk_Bc);
-  tree_->Branch("HLT_JpsiTk",&HLT_JpsiTk);
-  tree_->Branch("HLT_DMu4_3_LM",&HLT_DMu4_3_LM);
-  tree_->Branch("HLT_DMu4_LM_Displaced",&HLT_DMu4_LM_Displaced);
+  // tree_->Branch("HLT_Dim25",&HLT_Dim25);
+  // tree_->Branch("HLT_JpsiTrk_Bc",&HLT_JpsiTrk_Bc);
+  // tree_->Branch("HLT_JpsiTk",&HLT_JpsiTk);
+  // tree_->Branch("HLT_DMu4_3_LM",&HLT_DMu4_3_LM);
+  // tree_->Branch("HLT_DMu4_LM_Displaced",&HLT_DMu4_LM_Displaced);
 
   tree_L1muons->Branch("L1mu_pt", &L1mu_pt); 
   tree_L1muons->Branch("L1mu_eta", &L1mu_eta);
@@ -1161,6 +1402,10 @@ MuMu::beginJob()
     tree_->Branch(HLTPaths_[i].c_str(), &hltsVector[i]);
     tree_->Branch(("mu1_"+HLTPaths_[i]).c_str(), &mu1_hltsVector[i]);
     tree_->Branch(("mu2_"+HLTPaths_[i]).c_str(), &mu2_hltsVector[i]);
+  }
+
+  for(std::size_t i = 0; i < HLTPathsFired_.size(); ++i){ 
+    tree_->Branch(HLTPathsFired_[i].c_str(), &hltsVector_fired[i]);
   }
   for(std::size_t i = 0; i < L1Seeds_.size(); ++i){ 
     tree_->Branch(L1Seeds_[i].c_str(), &l1sVector[i]);

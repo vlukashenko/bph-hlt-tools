@@ -15,7 +15,8 @@ from http.client import HTTPException #python3
 
 
 _ProductionTag = '_First2024Check_April24_TEST'
-
+_ProductionTag = '_MuonJsonTest'
+_ProductionTag = "HLTStudy"
 def getOptions():
     """
     Parse and return the arguments provided by the user.
@@ -86,12 +87,15 @@ def main():
         
         config.Data.inputDataset = None
         config.Data.inputDBS = 'global'
-        config.Data.splitting = 'FileBased'
+        #config.Data.splitting = 'FileBased'
+        config.Data.splitting = "LumiBased"
         config.Data.unitsPerJob = 5
-        config.Data.totalUnits  = 500
-        #config.Data.lumiMask = 'Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_MuonPhys.txt'
-        
+        #config.Data.totalUnits  = 500
+        #config.Data.lumiMask = '/eos/user/c/cmsdqm/www/CAF/certification/Collisions24/DCSOnly_JSONS/dailyDCSOnlyJSON/Collisions24_13p6TeV_378981_380403_DCSOnly_TkPx.json'
+        #config.Data.runRange = '379765-379769'
+
         config.Data.outLFNDirBase = '/store/user/hcrottel/'+str(config.General.workArea)
+        #config.Data.outLFNDirBase = '/store/group/phys_bphys/trigger/Run2022/'#+str(config.General.workArea)
         config.Data.publication = False
         config.Data.outputDatasetTag = None
         config.Site.storageSite = 'T3_CH_CERNBOX'
@@ -137,32 +141,70 @@ def main():
             #'/ParkingDoubleMuonLowMass7/Run2023C-PromptReco-v4/MINIAOD',
 
             #'/ParkingDoubleMuonLowMass0/Run2023D-PromptReco-v1/MINIAOD',
-
+            #'/ParkingDoubleMuonLowMass2/Run2023D-PromptReco-v1/MINIAOD',
+            #'/ParkingDoubleMuonLowMass3/Run2023D-PromptReco-v1/MINIAOD',
 
             # '/ParkingDoubleMuonLowMass0/Run2024B-PromptReco-v1/MINIAOD',
             # '/ParkingDoubleMuonLowMass1/Run2024B-PromptReco-v1/MINIAOD',
             # '/ParkingDoubleMuonLowMass2/Run2024B-PromptReco-v1/MINIAOD',
-            '/ParkingDoubleMuonLowMass3/Run2024B-PromptReco-v1/MINIAOD',
-            '/ParkingDoubleMuonLowMass4/Run2024B-PromptReco-v1/MINIAOD',
-            '/ParkingDoubleMuonLowMass5/Run2024B-PromptReco-v1/MINIAOD',
-            '/ParkingDoubleMuonLowMass6/Run2024B-PromptReco-v1/MINIAOD',
-            '/ParkingDoubleMuonLowMass6/Run2024B-PromptReco-v1/MINIAOD',
+            # '/ParkingDoubleMuonLowMass3/Run2024B-PromptReco-v1/MINIAOD',
+            # '/ParkingDoubleMuonLowMass4/Run2024B-PromptReco-v1/MINIAOD',
+            # '/ParkingDoubleMuonLowMass5/Run2024B-PromptReco-v1/MINIAOD',
+            # '/ParkingDoubleMuonLowMass6/Run2024B-PromptReco-v1/MINIAOD',
+            # '/ParkingDoubleMuonLowMass6/Run2024B-PromptReco-v1/MINIAOD',
+            # '/ParkingDoubleMuonLowMass0/Run2024C-PromptReco-v1/MINIAOD',
+            # '/ParkingDoubleMuonLowMass1/Run2024C-PromptReco-v1/MINIAOD',
+            # '/ParkingDoubleMuonLowMass2/Run2024C-PromptReco-v1/MINIAOD',
+            # '/ParkingDoubleMuonLowMass3/Run2024C-PromptReco-v1/MINIAOD',
+        
 
             # '/ParkingSingleMuon0/Run2024B-PromptReco-v1/MINIAOD',
             # '/ParkingSingleMuon1/Run2024B-PromptReco-v1/MINIAOD',
             # '/ParkingSingleMuon2/Run2024B-PromptReco-v1/MINIAOD',
-            '/ParkingSingleMuon3/Run2024B-PromptReco-v1/MINIAOD',
-            '/ParkingSingleMuon4/Run2024B-PromptReco-v1/MINIAOD',
-            '/ParkingSingleMuon5/Run2024B-PromptReco-v1/MINIAOD',
-            '/ParkingSingleMuon6/Run2024B-PromptReco-v1/MINIAOD',
-            '/ParkingSingleMuon7/Run2024B-PromptReco-v1/MINIAOD',
+            # '/ParkingSingleMuon3/Run2024B-PromptReco-v1/MINIAOD',
+            # '/ParkingSingleMuon4/Run2024B-PromptReco-v1/MINIAOD',
+            # '/ParkingSingleMuon5/Run2024B-PromptReco-v1/MINIAOD',
+            # '/ParkingSingleMuon6/Run2024B-PromptReco-v1/MINIAOD',
+            # '/ParkingSingleMuon7/Run2024B-PromptReco-v1/MINIAOD',
+            # '/ParkingSingleMuon0/Run2024C-PromptReco-v1/MINIAOD',
+            # '/ParkingSingleMuon1/Run2024C-PromptReco-v1/MINIAOD',
 
+            # "/Muon0/Run2024C-PromptReco-v1/MINIAOD",
+            # "/Muon1/Run2024C-PromptReco-v1/MINIAOD",
+
+            "/Muon0/Run2024D-PromptReco-v1/MINIAOD",
+            "/Muon1/Run2024D-PromptReco-v1/MINIAOD",
+
+            #"/Muon0/Run2024E-PromptReco-v1/MINIAOD",
+            #"/Muon1/Run2024E-PromptReco-v1/MINIAOD",
+
+
+            # "/BTagMu/Run2024C-PromptReco-v1/MINIAOD",
+            # "/DisplacedJet/Run2024C-PromptReco-v1/MINIAOD",
+            # "/EGamma0/Run2024C-PromptReco-v1/MINIAOD",
+            # "/JetMET0/Run2024C-PromptReco-v1/MINIAOD",
+            # "/Muon0/Run2024C-PromptReco-v1/MINIAOD",
+            # "/MuonEG/Run2024C-PromptReco-v1/MINIAOD",
+            # "/ParkingHH/Run2024C-PromptReco-v1/MINIAOD",
+            # "/ParkingLLP/Run2024C-PromptReco-v1/MINIAOD",
+            # "/ParkingVBF0/Run2024C-PromptReco-v1/MINIAOD",
+            # "/Tau/Run2024C-PromptReco-v1/MINIAOD",
+
+
+            # "/Muon0/Run2023D-PromptReco-v1/MINIAOD",
+            # "/Muon1/Run2023D-PromptReco-v1/MINIAOD",
+            # "/Muon0/Run2023D-PromptReco-v2/MINIAOD",
+            # "/Muon1/Run2023D-PromptReco-v2/MINIAOD",
+
+            #"/Muon/Run2022F-PromptReco-v1/MINIAOD",
+            #"/ParkingDoubleMuonLowMass0/Run2023D-PromptReco-v1/MINIAOD",
+            #"/ParkingDoubleMuonLowMass0/Run2023D-PromptReco-v2/MINIAOD",
         ]
         
         for inDS in inputDatasets:
             # inDS is of the form /A/B/C. Since B is unique for each inDS, use this in the CRAB request name.
             #config.General.requestName = inDS.split('/')[1]+'-'+inDS.split('/')[2]
-            config.General.requestName = inDS.split('/')[1]+'-'+inDS.split('/')[2] + 'HLTStudy'
+            config.General.requestName = inDS.split('/')[1]+'-'+inDS.split('/')[2] + _ProductionTag#
             config.Data.inputDataset = inDS
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)
             # Submit.
