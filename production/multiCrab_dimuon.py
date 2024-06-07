@@ -16,7 +16,7 @@ from http.client import HTTPException #python3
 
 _ProductionTag = '_First2024Check_April24_TEST'
 _ProductionTag = '_MuonJsonTest'
-_ProductionTag = "HLTStudy"
+_ProductionTag = "HLTStudy_v2"
 def getOptions():
     """
     Parse and return the arguments provided by the user.
@@ -89,7 +89,7 @@ def main():
         config.Data.inputDBS = 'global'
         #config.Data.splitting = 'FileBased'
         config.Data.splitting = "LumiBased"
-        config.Data.unitsPerJob = 5
+        config.Data.unitsPerJob = 15
         #config.Data.totalUnits  = 500
         #config.Data.lumiMask = '/eos/user/c/cmsdqm/www/CAF/certification/Collisions24/DCSOnly_JSONS/dailyDCSOnlyJSON/Collisions24_13p6TeV_378981_380403_DCSOnly_TkPx.json'
         #config.Data.runRange = '379765-379769'
@@ -125,6 +125,8 @@ def main():
             # "/Muon1/Run2023D-PromptReco-v2/MINIAOD",
 
             #"/Muon/Run2022F-PromptReco-v1/MINIAOD",
+
+            "/ParkingDoubleMuonLowMass0/Run2022F-PromptReco-v1/MINIAOD",            
 
             #"/ParkingDoubleElectronLowMass/Run2023C-PromptReco-v1/MINIAOD",
             #"/ParkingDoubleElectronLowMass/Run2023C-PromptReco-v2/MINIAOD",
@@ -169,11 +171,11 @@ def main():
             # '/ParkingSingleMuon0/Run2024C-PromptReco-v1/MINIAOD',
             # '/ParkingSingleMuon1/Run2024C-PromptReco-v1/MINIAOD',
 
-            # "/Muon0/Run2024C-PromptReco-v1/MINIAOD",
-            # "/Muon1/Run2024C-PromptReco-v1/MINIAOD",
+            #"/Muon0/Run2024C-PromptReco-v1/MINIAOD",
+            #"/Muon1/Run2024C-PromptReco-v1/MINIAOD",
 
-            "/Muon0/Run2024D-PromptReco-v1/MINIAOD",
-            "/Muon1/Run2024D-PromptReco-v1/MINIAOD",
+            #"/Muon0/Run2024D-PromptReco-v1/MINIAOD",
+            #"/Muon1/Run2024D-PromptReco-v1/MINIAOD",
 
             #"/Muon0/Run2024E-PromptReco-v1/MINIAOD",
             #"/Muon1/Run2024E-PromptReco-v1/MINIAOD",

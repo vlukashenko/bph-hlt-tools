@@ -687,6 +687,8 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       dR2_threshold = 0.5 * 0.5;
       mu1_L1_match = 0;
       mu2_L1_match = 0;
+      dR_muon1_L1 = -1;
+      dR_muon2_L1 = -1;
       for (auto itr = gmuons->begin(0); itr != gmuons->end(0); ++itr) {
 
         if (iMuon1->charge()==itr->charge()) {
@@ -722,6 +724,8 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       mu2_L2_match = 0;
       mu1_L3_match = 0;
       mu2_L3_match = 0;
+      dR_muon1_L3 = -1;
+      dR_muon2_L3 = -1;      
 
       pat::TriggerObjectStandAlone muon1_trgobj, muon2_trgobj;
 

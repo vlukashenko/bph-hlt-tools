@@ -36,12 +36,21 @@ HLT_Paths=[ "HLT_DoubleMu4_3_LowMass_v",
             "HLT_Mu0_L1DoubleMu_v",
             "HLT_Mu3_PFJet40_v",
             "HLT_Mu15_v",
-            
-            "HLT_Mu0_Barrel_v2",
+            "HLT_DoubleMu2_Jpsi_LowPt_v",
+            "HLT_Dimuon10_Upsilon_y1p4_v",
+
+            "HLT_Mu0_Barrel_v",
             "HLT_Mu0_Barrel_L1HP10_v",
             "HLT_Mu0_Barrel_L1HP11_v",
             "HLT_Mu9_Barrel_L1HP10_IP6_v",
             "HLT_Mu10_Barrel_L1HP11_IP6_v",
+
+            "HLT_Mu3er1p5_PFJet100er2p5_PFMET90_PFMHT90_IDTight_v",
+            "HLT_Mu3_L1SingleMu5orSingleMu7_v",
+
+
+
+
             #"HLT_DoubleEle5_eta1p22_mMax6_v",
             #"HLT_DoubleEle5p5_eta1p22_mMax6_v",
             #"HLT_DoubleEle6_eta1p22_mMax6_v",
@@ -51,6 +60,17 @@ HLT_Paths=[ "HLT_DoubleMu4_3_LowMass_v",
             
 ]
 
+fired_HLTs = [
+            "HLT_VBF_DiPFJet",
+            "HLT_Ele",
+            "HLT_BTagMu_AK",
+            "HLT_HT3",
+            "HLT_Diphoton",
+            "HLT_AK8PFJet",
+            "HLT_PFHT",
+            "HLT_QuadPFJet",
+            "HLT_DoubleMediumCharged"
+]
 
 import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
@@ -95,10 +115,11 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
 #process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_data')
 #process.GlobalTag = GlobalTag(process.GlobalTag, '124X_dataRun3_Prompt_v4') # for 2022
-#process.GlobalTag = GlobalTag(process.GlobalTag, '124X_dataRun3_PromptAnalysis_v2') # for 2022
+process.GlobalTag = GlobalTag(process.GlobalTag, '124X_dataRun3_PromptAnalysis_v2') # for 2022
 #process.GlobalTag = GlobalTag(process.GlobalTag, '130X_dataRun3_HLT_v2')      #2023 B
 #process.GlobalTag = GlobalTag(process.GlobalTag, '130X_dataRun3_HLT_v2')  #for CMSSW >= 13_0_3 
-process.GlobalTag = GlobalTag(process.GlobalTag, '140X_dataRun3_Prompt_v2')  #for CMSSW >= 13_0_3 
+#process.GlobalTag = GlobalTag(process.GlobalTag, '140X_dataRun3_Prompt_v2')  #for CMSSW >= 13_0_3 
+#process.GlobalTag = GlobalTag(process.GlobalTag, '130X_dataRun3_PromptAnalysis_v1')  #for CMSSW >= 13_0_3" 
 
 
 ## Message Logger and Event range
@@ -116,7 +137,7 @@ process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(options.maxE)
 #data_file  = "/store/data/Run2022F/Muon/MINIAOD/PromptReco-v1/000/360/390/00000/be5c66b6-fea2-48f4-879f-846f6de0e511.root"
 data_file  = "/store/data/Run2024B/ParkingDoubleMuonLowMass0/MINIAOD/PromptReco-v1/000/379/058/00000/d57fe8ca-ccb0-4df9-a027-d6fa9788b51d.root" #2024B
 data_file  = "/store/data/Run2024B/ParkingSingleMuon0/MINIAOD/PromptReco-v1/000/379/252/00000/75e2e99e-80b2-429a-9d60-1e7e4c9682fd.root"
-
+data_file  = "/store/data/Run2024E/ParkingDoubleMuonLowMass0/MINIAOD/PromptReco-v1/000/380/963/00000/01db270e-3fc8-41c3-b92a-c7477c365533.root"
 
 if options.isMC:
     data_file = '/store/mc/Run3Summer22EEMiniAODv3/ButoJpsiK_Jpsito2Mu_TuneCP5_13p6TeV_pythia8-evtgen/MINIAODSIM/124X_mcRun3_2022_realistic_postEE_v1-v2/2520000/04f4baff-0d98-4f64-a0e2-0421d62db508.root'
@@ -165,6 +186,7 @@ process.rootuple = cms.EDAnalyzer('MuMu',
                           algInputTag = cms.InputTag("gtStage2Digis", "", "RECO"),
                           l1Muons = cms.InputTag("gmtStage2Digis", "Muon", "RECO"),
                           HLTPaths = cms.vstring(HLT_Paths),
+                          HLTPathsFired = cms.vstring(fired_HLTs),
                           L1Seeds = cms.vstring(L1_seeds),
                           OnlyBest = cms.bool(False),
                           isMC = cms.bool(options.isMC),
@@ -177,7 +199,9 @@ process.rootuple = cms.EDAnalyzer('MuMu',
                           bMasscut          = cms.vdouble(5.0,6.0),
                           debug = cms.bool(options.debug)        
                           )
+
 dataset_name = data_file.split('/')[4][:11]
+dataset_name = ''
 file_name = f'Rootuple_DiMu-MiniAOD_{dataset_name}.root'
 if options.isMC:
     file_name = f'Rootuple_MC_DiMu-MiniAOD_{dataset_name}.root'
