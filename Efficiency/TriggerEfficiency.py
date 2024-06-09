@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import mplhep as hep
-import uproot3 as uproot
+import uproot
 import seaborn as sns
 import numpy as np
 import json
@@ -56,9 +56,9 @@ class npEncoder(json.JSONEncoder):
 
 Bins1d = dict(
     muProbe_pt = [0,1,2,3,4,5,6,7,8,9,10,12,14,16,18,20,25,30,40,50],
-    muProbe_eta = np.linspace(-2.4, 2.4, 24),
+    muProbe_eta = np.linspace(-2.4, 2.4, 11),
     DiMu_mass = [2.9,2.95, 3, 3.05, 3.1, 3.15 ,3.2, 3.25, 3.3],
-    muProbe_phi = np.linspace(-np.pi, np.pi, 20),
+    muProbe_phi = np.linspace(-np.pi, np.pi, 9),
     dR_muons = [0, 0.02, 0.04, 0.06, 0.08, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5,  0.7],
     lxySig = [0, 0.5, 1, 1.5, 2, 2.5, 3,  3.5, 4, 4.5, 5, 5.5]
 )
@@ -91,7 +91,7 @@ if __name__== '__main__':
 
     tagPath = 'HLT_Mu8_v'
     probePath = 'HLT_Mu0_L1DoubleMu_v'
-    input_file = '/eos/cms/store/group/phys_bphys/trigger/Run2024/TagTuples/Muon_Run2024C_v1.root'
+    input_file = '/eos/cms/store/group/phys_bphys/trigger/Run2024/TagTuples/Muon_Run2024C.root'
     run  = '2024C'
     Name = 'L1Efficiency_STEAM_May'
 
@@ -128,7 +128,8 @@ if __name__== '__main__':
     outputdir = os.path.join('Run'+run, Name)
     os.makedirs(outputdir, exist_ok=True)
     file = uproot.open(input_file)
-    data = file[tagPath].arrays( outputtype=pd.DataFrame)
+    data_np = file[tagPath].arrays( library="np")
+    data = pd.DataFrame(data_np)
     
     
     if 'HLT_Mu8' in tagPath and 'HLT_Mu0_L1' in probePath:
@@ -179,3 +180,38 @@ if __name__== '__main__':
         ax.grid(True)
         plt.savefig(f'{outputdir}/Tag{tagPath}_Probe{probePath}_{var1}.pdf', bbox_inches='tight')
         plt.close()
+
+        for var2 in ['muProbe_pt', 'muProbe_eta', 'muProbe_phi', 'dR_muons','lxySig']:
+            if var2 == var1: continue
+
+            xedges = np.array(Bins1d[var1])
+            yedges = np.array(Bins1d[var2])
+            H_num, _, _ = np.histogram2d(data.query(tagQuery)[var1], data.query(tagQuery)[var2], bins=[xedges, yedges], weights=data.query(tagQuery)[f'muProbe_{probePath}'])
+            H_denum, _, _ = np.histogram2d(data.query(tagQuery)[var1], data.query(tagQuery)[var2], bins=[xedges, yedges])
+            ratio = np.divide(H_num, H_denum, out=np.zeros_like(H_num), where=H_denum != 0)
+
+            # Plotting with matplotlib
+            plt.figure(figsize=(10, 8))
+            plt.imshow(ratio.T, origin='lower', aspect='auto', extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]], cmap='viridis')
+
+            xcenters = 0.5 * (xedges[:-1] + xedges[1:])
+            ycenters = 0.5 * (yedges[:-1] + yedges[1:])
+
+
+            for i in range(ratio.shape[0]):
+               for j in range(ratio.shape[1]):
+                   bin_center_x = xcenters[i]
+                   bin_center_y = ycenters[j]
+                   # Adjust the annotation to center it in the cell
+                   text = plt.text(bin_center_x, bin_center_y, round(ratio[i, j], 3),
+                       ha="center", va="center", color="black", fontsize=10)
+
+
+            plt.colorbar(label='L1 Efficiency')
+            plt.xlabel(pretty_name.get(var1, var1))
+            plt.ylabel(pretty_name.get(var2, var2))
+            hep.cms.label(data=True, label=run, com=13.6)
+            plt.savefig(f'{outputdir}/Tag{tagPath}_Probe{probePath}_{var1}_vs_{var2}.pdf', bbox_inches='tight')
+            plt.close()
+
+
