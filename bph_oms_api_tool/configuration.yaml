@@ -1,0 +1,21 @@
+components:
+   - 'CSC'
+   - 'CTPPS'
+   - 'CTPPS_TOT'
+   - 'DAQ'
+   - 'DCS'
+   - 'DQM'
+   - 'DT' 
+   - 'ECAL'
+   - 'ES'
+   - 'GEM'
+   - 'HCAL'
+   - 'L1SCOUT'
+   - 'PIXEL'
+   - 'RPC'
+   - 'TCDS'
+   - 'TRACKER'
+   - 'TRG'
+
+
+  
