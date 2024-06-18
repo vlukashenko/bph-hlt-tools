@@ -1,10 +1,11 @@
 from messages import info, warning, error
-from helpers import getPrescaleIdx_per_run, getL1RateInfo, getL1TotalRateInfo, getRunInfo, getLatestRun, getHLTRateInfo, getLumiSecLumi, isGoodRun 
+from helpers import getPrescaleIdx_per_run, getL1RateInfo, getL1TotalRateInfo, getRunInfo, getLatestRun, getHLTRateInfo, getLumiSecLumi, isGoodRun, getActiveComponents 
 from generic_helpers import flattenList, removeDuplicates
 from plotting import reformat_for_plotting
 import matplotlib.pyplot as plt
 import mplhep as hep
 import json
+import yaml
 import os
 hep.style.use("CMS")
 
@@ -140,3 +141,25 @@ def test_hltrate(omsapi, triggers, runs, output_path):
    
 def test_lumi():
     print("PLACEHOLDER")
+
+def test_bad_runs(omsapi, runs, output_path):
+    info("Look for the bad runs. The isGoodRun flag is identified by : run in l1_hlt_mode, recorded_lumi < 0, info exists.")
+    with open('configuration.yaml', 'r') as f:
+        config = yaml.safe_load(f)
+
+    save_info = {} #[isGoodRun, components == config["components"] 
+    for r in runs:
+        components = getActiveComponents(omsapi,r)
+
+        if isGoodRun(omsapi, r) and components == config['components']: continue
+        else:
+           info("Run {}".format(r) + " is " + str(isGoodRun(omsapi, r)) + " with " + ",".join(map(str, components)) + " components")
+           save_info[r] = [isGoodRun, list(set(config['components']) - set(components))]
+
+    with open(output_path+'/bad_runs.yaml', 'w') as f:
+        yaml.dump(save_info, f)
+        info("Saved bad runs info into: " +  output_path+'/bad_runs.yaml')
+
+    
+    info("Found {}/{} bad runs".format(len(save_info.keys()), int(runs[-1])-int(runs[0])))
+     
