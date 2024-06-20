@@ -232,3 +232,16 @@ def isGoodRun(omsapi, r):
        info("Run {} is bad. See more in helpers::isGoodRun. Skipping.".format(r))
 
     return flag
+
+
+def getActiveComponents(omsapi, r):
+    query = omsapi.query("runs")
+    query.filter('run_number', r)
+    query.set_verbose(True)
+    query.per_page = 10000
+    query.attrs(['components', 'l1_hlt_mode',  'recorded_lumi']) 
+    harvest_info = query.data().json()['data']
+    if len(harvest_info[0]['attributes']['components']) > 0 :
+        return harvest_info[0]['attributes']['components']
+    else: 
+        return ["Empty"]
