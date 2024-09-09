@@ -217,7 +217,7 @@ def getAllFills(omsapi, era):
     return good_fills
 
  
-def isGoodRun(omsapi, r):
+def isGoodRun(omsapi, r, verbose=False):
     query = omsapi.query("runs")
     query.filter('run_number', r)
     query.set_verbose(True)
@@ -228,9 +228,11 @@ def isGoodRun(omsapi, r):
     flag = True if flag_info_exist and "collisions" in harvest_info[0]['attributes']['l1_hlt_mode'] and harvest_info[0]['attributes']['recorded_lumi'] > 0 else False
     if flag:
        info("Run {} is good. See more in helpers::isGoodRun. Continue.".format(r))
-    else:
+    elif not flag and not verbose :
        info("Run {} is bad. See more in helpers::isGoodRun. Skipping.".format(r))
-
+    elif not flag and verbose:
+       info("Run {} is bad. See more in helpers::isGoodRun. Skipping.".format(r))
+       info("Reason: {} {} {}".format(flag_info_exist, harvest_info[0]['attributes']['l1_hlt_mode'] if harvest_info[0]['attributes']['l1_hlt_mode'] != None else None, str(harvest_info[0]['attributes']['recorded_lumi'] ) ))
     return flag
 
 
@@ -241,7 +243,49 @@ def getActiveComponents(omsapi, r):
     query.per_page = 10000
     query.attrs(['components', 'l1_hlt_mode',  'recorded_lumi']) 
     harvest_info = query.data().json()['data']
+    if len(harvest_info) == 0 : return ["Empty"]
     if len(harvest_info[0]['attributes']['components']) > 0 :
         return harvest_info[0]['attributes']['components']
     else: 
         return ["Empty"]
+
+def isCollisions(omsapi, runs):
+    collision_runs = []
+    for r in runs:
+        query = omsapi.query("runs")
+        query.filter('run_number', r)
+        query.set_verbose(False)
+        query.per_page = 10000
+        query.attrs(['l1_hlt_mode'])
+        harvest_info = query.data().json()['data']
+        if len(harvest_info) == 0 : continue
+        if harvest_info[0]['attributes']['l1_hlt_mode'] != None and "collisions" not in harvest_info[0]['attributes']['l1_hlt_mode']: continue
+        collision_runs.append(r)
+    return collision_runs
+
+def isLuminosity(omsapi, runs):
+    luminosity_runs = []
+    for r in runs:
+       query = omsapi.query("runs")
+       query.filter('run_number', r)
+       query.per_page = 10000
+       query.attrs(['recorded_lumi']) 
+       harvest_info = query.data().json()['data']
+       if len(harvest_info) == 0 : continue
+       if harvest_info[0]['attributes']['recorded_lumi'] != None and harvest_info[0]['attributes']['recorded_lumi'] > 0:
+           luminosity_runs.append(r)
+    return luminosity_runs
+
+def isInfo(omsapi, runs):
+    healthy_info_runs = []
+    for r in runs:
+       query = omsapi.query("runs")
+       query.filter('run_number', r)
+       query.per_page = 10000
+       query.attrs(['recorded_lumi']) 
+       harvest_info = query.data().json()['data']
+       flag_info_exist = len(harvest_info) > 0 and harvest_info[0]['attributes']['l1_hlt_mode'] != None and harvest_info[0]['attributes']['recorded_lumi'] != None
+       if not harvest_info: continue
+       healthy_info_runs.append(r)
+    return healthy_info_runs
+
