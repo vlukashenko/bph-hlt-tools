@@ -1,8 +1,10 @@
 #!/bin/bash
 outdir=Configurations
 mkdir $outdir
+hltGetConfiguration /online/collisions/2024/2e34/v1.4/HLT > ${outdir}/Menu24_G.py
 
-hltGetConfiguration /online/collisions/2024/2e34/v1.1/HLT > ${outdir}/Menu24_B.py
+
+#hltGetConfiguration /online/collisions/2024/2e34/v1.1/HLT > ${outdir}/Menu24_B.py
 
 # hltGetConfiguration /online/collisions/2022/2e34/v1.0/HLT > Menu22_v0.py
 # hltGetConfiguration /online/collisions/2022/2e34/v1.1/HLT > Menu22_v1.py

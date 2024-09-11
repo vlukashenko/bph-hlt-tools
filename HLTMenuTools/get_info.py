@@ -15,7 +15,11 @@ ALL_BPH_Datasets = ['ParkingDoubleMuonLowMass0',
                     "ParkingSingleMuon4",
                     "ParkingSingleMuon5",
                     "ParkingSingleMuon6",
-                    "ParkingSingleMuon7",]
+                    "ParkingSingleMuon7",
+                    "ScoutingPFRun3",
+                    "ZeroBias",
+                    "Muon0", 
+                    "Muon1"]
 NOT_BPH_Datasets = ['AlCaLowPtJet',
                     'AlCaLumiPixelsCountsExpress',
                     'AlCaLumiPixelsCountsPrompt',
@@ -35,7 +39,10 @@ NOT_BPH_Datasets = ['AlCaLowPtJet',
                     "EphemeralZeroBias6","EphemeralZeroBias7",
                     "EventDisplay","ExpressAlignment","ExpressPhysics",
                     "HLTMonitor","HLTPhysics","HcalNZS","JetMET0","JetMET1",
-                    "L1Accept","Muon0","Muon1","MuonEG","NoBPTX","OnlineMonitor"
+                    "L1Accept","MuonEG","NoBPTX","OnlineMonitor", 
+                    "ParkingHH", "ParkingLLP", "ParkingVBF", "ParkingVBF0", "ParkingVBF1", "ParkingVBF2", "ParkingVBF3", "ParkingVBF4", "ParkingVBF5", "ParkingVBF6", "ParkingVBF7",
+                    "RPCMonitor", "TestEnablesEcalHcal", "Tau", 
+                    "ScoutingPFMonitor", "ScoutingPF", "TestEnablesEcalHcalDQM" 
                     ]
 
 
@@ -193,6 +200,7 @@ if __name__=="__main__":
                     paths_filters[path][module][key]  = unpack_value(val)
                 paths_filters[path][module]['type_'] = module_obj.type_()
 
+    import os
     os.makedirs('Paths', exist_ok=True)
     create_json(paths_filters, f'Paths/Path_filters_{menu_str.split(".")[1]}.json')
 
