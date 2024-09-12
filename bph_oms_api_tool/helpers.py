@@ -178,12 +178,20 @@ def getNextRun(omsapi, r):
 def getHLTRateInfo(omsapi, trig, run_num, attributes = []):
     query = omsapi.query("hltpathrates")
     query.filter("run_number", run_num)
-    print(trig)
+    #print(trig)
     query.filter("path_name", trig)
     query.set_verbose(True)
     query.per_page = 10000  # to get all names in one go
-    print("HLT rates" , query.data().json())
-    return 0,0,0,0
+    rates = []
+    for i in query.data().json()['data']:
+        #print(i)
+        #print(i['attributes']['rate'])
+        rates.append(i['attributes']['rate'])
+ 
+    import numpy as np
+    #print("HLT rates " , np.average(rates))
+    average_rate = np.average(rates)
+    return average_rate
     #query.attrs(attributes)
     #base_path = query.data().json()['data'][0]['attributes']
 

@@ -37,7 +37,7 @@ def controller(args):
         if args.runmax == "latest":
             runmax = int(getLatestRun(omsapi))
         info("Running for the runs {}-{}".format(args.runmin, runmax))
-        runs = list(range(args.runmin, runmax, 1))
+        runs = list(range(int(args.runmin), int(runmax), 1))
     elif args.run == -1 and args.runmax == None and args.era == None:
         latest_run = getLatestRun(omsapi)
         info("Running for the latest run {}".format(latest_run)) 
@@ -63,7 +63,7 @@ def controller(args):
     output_path = args.output_path
     if runs != []:
         output_path = args.output_path + '/'+str(runs[0])+'_'+str(runs[-1])
-        os.mkdir(output_path)
+        os.makedirs(output_path, exist_ok=True)
     if lumisections != []:
         output_path = args.output_path + '/'+str(lumisections[0])+'_'+str(lumisections[-1])
     os.makedirs(output_path, exist_ok=True)
