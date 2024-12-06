@@ -128,17 +128,29 @@ def test_l1totalrate(omsapi, runs, output_path):
 
 
 def test_hltrate(omsapi, triggers, runs, output_path):
-    info("Running total l1rate test")
-    l1rates = []
+    info("Running total hltrate test")
     with open(triggers, 'r') as file:
         test_trigger_paths = list(json.load(file).keys())
+    hlt_rates = {}
     for r in runs:
         if not isGoodRun(omsapi, r): continue        
         for t in test_trigger_paths:
-            hlt_rate, hlt_physics, hlt_calibration, hlt_random = getHLTRateInfo(omsapi, t, r)
+            hlt_rate = getHLTRateInfo(omsapi, t, r)
             info("Total HLT rate for trigger {} in run {} is {} Hz".format(t, r, hlt_rate))
-            info("Physics HLT rate for trigger {} in run {} is {} Hz".format(t, r, hlt_physics))
-   
+            if t not in hlt_rates.keys():
+                hlt_rates[t] = [hlt_rate]
+            else:
+                hlt_rates[t].append(hlt_rate)
+    results = {}
+    import numpy as np
+    for t in hlt_rates.keys():
+        results[t] = [np.average(hlt_rates[t])]
+    import pandas as pd
+    df = pd.DataFrame.from_dict(results)
+    output_name = output_path+"average_hlt_rates_r{}_{}.csv".format(runs[0], runs[-1])
+    df.to_csv(output_name, index=False)
+    info("Average HLT rate for triggers between run {} and run {} is saved in {}".format(runs[0], runs[-1], output_name))
+
 def test_lumi():
     print("PLACEHOLDER")
 

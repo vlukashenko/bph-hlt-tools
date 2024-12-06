@@ -8,6 +8,25 @@ import json
 import os
 from scipy import stats
 plt.style.use(hep.style.CMS)
+import math
+import scipy
+print(np.__version__, scipy.__version__)
+def deltaR2(eta1, phi1, eta2, phi2):
+    deta = eta1 - eta2
+    dphi = abs(phi1 - phi2)
+    if dphi > math.pi:
+        dphi -= 2 * math.pi
+    return deta * deta + dphi * dphi
+
+colors = [
+    "red",  # Red-Orange
+    "#33FF57",  # Green
+    "#3357FF",  # Blue
+    "#FF33A6",  # Pink
+    "black",  # Yellow
+    "#33FFF6",  # Cyan
+    "#FF8C33",  # Orange
+]
 
 def clopper_pearson(x, n, alpha=0.32, return_errors=True):
     """Estimate the confidence interval for binomial distributions.
@@ -21,6 +40,7 @@ def clopper_pearson(x, n, alpha=0.32, return_errors=True):
     b = stats.beta.ppf
     #if isinstance(x, np.ndarray):
     #    alpha = alpha*np.ones_like(x)
+    print(type(x), type(n), type(alpha))
     ratio = x/n
     ratio = np.nan_to_num(ratio, nan=0)
     
@@ -58,7 +78,7 @@ Bins1d = dict(
     muProbe_pt = [0,1,2,3,4,5,6,7,8,9,10,12,14,16,18,20,25,30,40,50],
     muProbe_eta = np.linspace(-2.4, 2.4, 11),
     DiMu_mass = [2.9,2.95, 3, 3.05, 3.1, 3.15 ,3.2, 3.25, 3.3],
-    muProbe_phi = np.linspace(-np.pi, np.pi, 9),
+    muProbe_phi = np.linspace(-np.pi, np.pi, 10),
     dR_muons = [0, 0.02, 0.04, 0.06, 0.08, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5,  0.7],
     lxySig = [0, 0.5, 1, 1.5, 2, 2.5, 3,  3.5, 4, 4.5, 5, 5.5]
 )
@@ -77,7 +97,7 @@ if __name__== '__main__':
     tagPath = 'HLT_Mu8_v'
     probePath = 'HLT_Mu0_L1DoubleMu_v'
     input_file = '/eos/cms/store/group/phys_bphys/trigger/Run2024/TagTuples/Muon_Run2024C.root'
-    run  = '2024C'
+    run  = '2024G'
     Name = 'L1Efficiency_v0'
 
     tagQuery = "2.9<DiMu_mass<3.3"\
@@ -92,7 +112,7 @@ if __name__== '__main__':
     tagPath = 'HLT_Mu8_v'
     probePath = 'HLT_Mu0_L1DoubleMu_v'
     input_file = '/eos/cms/store/group/phys_bphys/trigger/Run2024/TagTuples/Muon_Run2024C.root'
-    run  = '2024C'
+    run  = '2024F'
     Name = 'L1Efficiency_STEAM_May'
 
     tagQuery = "2.9<DiMu_mass<3.3"\
@@ -115,23 +135,45 @@ if __name__== '__main__':
     #          +"& abs(muTag_eta)<2.4 & abs(muProbe_eta)<2.4 "\
     #          +"& muTag_charge+muProbe_charge==0"\
     #          #+"& muTag_L1_match==1  & muProbe_L1_match==1 "\             
+    #tagPath = 'HLT_Mu4_L1DoubleMu_v'
+    #probePath = 'HLT_DoubleMu4_3_LowMass_v'
+ 
+    tagPath = 'HLT_Mu8_v'
+    probePath = 'HLT_Mu0_L1DoubleMu_v'
+    input_file = '/eos/cms/store/group/phys_bphys/trigger/Run2024/TagTuples/Muon_RunYEAR_v2_bothNewG.root'
+    runs  = ['2024C', '2024D','2024E', '2024F', '2024G']
+    #runs = ['2024C', '2024D']
+    Name = 'L1MatchedvsNonMatchedEfficiency_v1'
 
 
+    tagQuery = "2.9<DiMu_mass<3.3"\
+             +"& DiMu_Prob>0.005 "\
+             +"& abs(muTag_eta)<2.4 & abs(muProbe_eta)<2.4 "\
+             +"& muTag_pt>8 "\
+             +"& muTag_L1_match==1"\
+             +"& muTag_charge+muProbe_charge==0"\
+             +"& GoodLumi==1"
 
-
+    #tagPath = 'HLT_Mu4_L1DoubleMu_v'
+    #probePath = 'HLT_DoubleMu4_3_LowMass_v'
+    tagPath = 'HLT_Mu8_v'
+    probePath = 'HLT_Mu0_L1DoubleMu_v'
+ 
+    input_file = '/eos/cms/store/group/phys_bphys/trigger/Run2024/TagTuples/steam_november/Muon_RunYEAR.root'
+    runs  = ['2024C', '2024D', '2024E', '2024F', '2024G', '2024H', "2024I"]
+    Name = 'L1Efficiency_STEAM_November'
+    tagQuery = "2.9<DiMu_mass<3.3"\
+             +"& DiMu_Prob>0.005 "\
+             +"& abs(muTag_eta)<2.4 & abs(muProbe_eta)<2.4 "\
+             +"& muTag_pt>8 "\
+             +"& muTag_L1_match==1"\
+             +"& muTag_charge+muProbe_charge==0"\
+             +"& muTagGlobal==1 & muProbeGlobal==1  & muTagloose==1 & muProbeloose==1"\
+ 
     arrays = ['DiMu_mass', 'DiMu_Prob', 'event', '*HLT_*' , 'mu*match', '*lxy*', '*charge*', 'L1*', '*dR*'] #+ ['DiMu_Prob']
-    arrays+= 'muProbe_pt,muProbe_eta,muProbe_phi,muTag_pt,muTag_eta,muTag_phi'.split(',')
+    arrays+= 'muProbe_pt,muProbe_eta,muProbe_phi,muTag_pt,muTag_eta,muTag_phi,muTagloose,muTagGlobal,muProbeloose,muProbeGlobal,GoodLumi'.split(',')
     arrays+= 'L3_muProbe_pt,L3_muProbe_eta,L3_muProbe_phi,L3_muTag_pt,L3_muTag_eta,L3_muTag_phi'.split(',')
 
-
-
-    outputdir = os.path.join('Run'+run, Name)
-    os.makedirs(outputdir, exist_ok=True)
-    file = uproot.open(input_file)
-    data_np = file[tagPath].arrays( library="np")
-    data = pd.DataFrame(data_np)
-    
-    
     if 'HLT_Mu8' in tagPath and 'HLT_Mu0_L1' in probePath:
         efficiencyText = 'L1 Efficiency'
     elif 'HLT_Mu4_L1' in tagPath and 'HLT_Double' in probePath:
@@ -139,79 +181,117 @@ if __name__== '__main__':
     else:
         efficiencyText = 'Efficiency'
 
+
+
+    outputdir = os.path.join('Run'+run, Name)
+    os.makedirs(outputdir, exist_ok=True)
+    data = {}
+    for r in runs:
+       input_file_to_open = input_file
+       input_file_to_open = input_file_to_open.replace("YEAR", r)
+       file = uproot.open(input_file_to_open)
+       data_np = file[tagPath].arrays( library="np")
+       data[r] = pd.DataFrame(data_np)
+    
+    
     for var1 in ['muProbe_pt', 'muProbe_eta', 'muProbe_phi', 'dR_muons','lxySig']:
+        fig, ax  = plt.subplots()    
+        i = 0
+        for r in runs:    
     
-    
-        h_all      = np.histogram(data.query(tagQuery)[var1], bins=Bins1d[var1])
-        h_passprob = np.histogram(data.query(tagQuery+f' and muProbe_{probePath}==1')[var1], 
-                                 bins=Bins1d[var1])        
-        ratio = h_passprob[0]/h_all[0]
-        err  = clopper_pearson(h_passprob[0], h_all[0])
+            h_all      = np.histogram(data[r].query(tagQuery)[var1], bins=Bins1d[var1])
+            h_all_matched      = np.histogram(data[r].query(tagQuery + ' and muTagGlobal==1 and muProbeGlobal==1  and muTagloose==1 and muProbeloose==1 ')[var1], bins=Bins1d[var1])
+            
+            h_passprob = np.histogram(data[r].query(tagQuery+f'and muProbe_matched==1 and muProbe_{probePath}==1 ')[var1], 
+                                     bins=Bins1d[var1])        
+ 
+            h_passprob_matched = np.histogram(data[r].query(tagQuery+f' and muProbe_{probePath}==1 and muTagGlobal==1 and muProbeGlobal==1  and muTagloose==1 and muProbeloose==1 ')[var1], bins=Bins1d[var1])        
+            
+            ratio = h_passprob[0]/h_all[0]
+            ratio_matched = h_passprob_matched[0]/h_all_matched[0]
+            err  = clopper_pearson(h_passprob[0], h_all[0])
+            err_matched  = clopper_pearson(h_passprob_matched[0], h_all_matched[0])
+            
+            efficiency_output = dict(
+                Bins    = h_all[1],
+                Passing = h_passprob[0],
+                All     = h_all[0],
+                Ratio   = ratio,
+                Error   = err,
+                Probe   = probePath,
+                Tag     = tagPath,
+                Query   = tagQuery,
+                Var     = var1,
+                input   = input_file
+            )
+ 
+            efficiency_output_matched = dict(
+                Bins    = h_all_matched[1],
+                Passing = h_passprob_matched[0],
+                All     = h_all_matched[0],
+                Ratio   = ratio,
+                Error   = err,
+                Probe   = probePath,
+                Tag     = tagPath,
+                Query   = tagQuery,
+                Var     = var1,
+                input   = input_file
+            )
+            
+            with open(f'{outputdir}/Efficiency1D_{var1}.json', 'w+') as jj:
+                json.dump(efficiency_output, jj, indent=4, cls=npEncoder)
+            
+            
+            bin_mean = (h_all[1][1:] + h_all[1][:-1])/2
+            bin_size = (h_all[1][1:] - h_all[1][:-1])/2
 
-        
-        efficiency_output = dict(
-            Bins    = h_all[1],
-            Passing = h_passprob[0],
-            All     = h_all[0],
-            Ratio   = ratio,
-            Error   = err,
-            Probe   = probePath,
-            Tag     = tagPath,
-            Query   = tagQuery,
-            Var     = var1,
-            input   = input_file
-        )
-        
-        with open(f'{outputdir}/Efficiency1D_{var1}.json', 'w+') as jj:
-            json.dump(efficiency_output, jj, indent=4, cls=npEncoder)
-        
-        
-        bin_mean = (h_all[1][1:] + h_all[1][:-1])/2
-        bin_size = (h_all[1][1:] - h_all[1][:-1])/2
+            ax.errorbar(bin_mean, ratio, err, xerr=bin_size, ls='none', marker='o', capsize=2, label = r, color=colors[i] )    
+            #ax.errorbar(bin_mean, ratio_matched, err_matched, xerr=bin_size, ls='none', marker='o', capsize=2, label = r + " + LooseID + GlobalID" )    
+            i+=1
 
-        
-        fig,ax = plt.subplots(figsize=[15,10])
-        ax.errorbar(bin_mean, ratio, err, xerr=bin_size, ls='none', marker='o', capsize=2 )    
         ax.set_ylabel(efficiencyText)
         ax.set_xlabel(pretty_name.get(var1, var1))
         #ax.legend(frameon=True, title='Run 2024D')
-        hep.cms.label(data=True, label=run, com=13.6)
-        ax.set_ylim(0, 1.2)
+        hep.cms.label(data=True, label="Preliminary", com=13.6)
+        ax.set_ylim(0., 1.2)
         ax.grid(True)
-        plt.savefig(f'{outputdir}/Tag{tagPath}_Probe{probePath}_{var1}.pdf', bbox_inches='tight')
+        plt.legend()
+        plt.savefig(f'{outputdir}/Tag{tagPath}_Probe{probePath}_{var1}.png', bbox_inches='tight')
         plt.close()
+
+        print(f'{outputdir}') 
 
         for var2 in ['muProbe_pt', 'muProbe_eta', 'muProbe_phi', 'dR_muons','lxySig']:
             if var2 == var1: continue
+            for r in runs:
+                xedges = np.array(Bins1d[var1])
+                yedges = np.array(Bins1d[var2])
+                H_num, _, _ = np.histogram2d(data[r].query(tagQuery)[var1], data[r].query(tagQuery)[var2], bins=[xedges, yedges], weights=data[r].query(tagQuery)[f'muProbe_{probePath}'])
+                H_denum, _, _ = np.histogram2d(data[r].query(tagQuery)[var1], data[r].query(tagQuery)[var2], bins=[xedges, yedges])
+                ratio = np.divide(H_num, H_denum, out=np.zeros_like(H_num), where=H_denum != 0)
 
-            xedges = np.array(Bins1d[var1])
-            yedges = np.array(Bins1d[var2])
-            H_num, _, _ = np.histogram2d(data.query(tagQuery)[var1], data.query(tagQuery)[var2], bins=[xedges, yedges], weights=data.query(tagQuery)[f'muProbe_{probePath}'])
-            H_denum, _, _ = np.histogram2d(data.query(tagQuery)[var1], data.query(tagQuery)[var2], bins=[xedges, yedges])
-            ratio = np.divide(H_num, H_denum, out=np.zeros_like(H_num), where=H_denum != 0)
+                # Plotting with matplotlib
+                plt.figure(figsize=(10, 8))
+                plt.imshow(ratio.T, origin='lower', aspect='auto', extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]], cmap='viridis')
 
-            # Plotting with matplotlib
-            plt.figure(figsize=(10, 8))
-            plt.imshow(ratio.T, origin='lower', aspect='auto', extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]], cmap='viridis')
-
-            xcenters = 0.5 * (xedges[:-1] + xedges[1:])
-            ycenters = 0.5 * (yedges[:-1] + yedges[1:])
-
-
-            for i in range(ratio.shape[0]):
-               for j in range(ratio.shape[1]):
-                   bin_center_x = xcenters[i]
-                   bin_center_y = ycenters[j]
-                   # Adjust the annotation to center it in the cell
-                   text = plt.text(bin_center_x, bin_center_y, round(ratio[i, j], 3),
-                       ha="center", va="center", color="black", fontsize=10)
+                xcenters = 0.5 * (xedges[:-1] + xedges[1:])
+                ycenters = 0.5 * (yedges[:-1] + yedges[1:])
 
 
-            plt.colorbar(label='L1 Efficiency')
-            plt.xlabel(pretty_name.get(var1, var1))
-            plt.ylabel(pretty_name.get(var2, var2))
-            hep.cms.label(data=True, label=run, com=13.6)
-            plt.savefig(f'{outputdir}/Tag{tagPath}_Probe{probePath}_{var1}_vs_{var2}.pdf', bbox_inches='tight')
-            plt.close()
+                for i in range(ratio.shape[0]):
+                   for j in range(ratio.shape[1]):
+                       bin_center_x = xcenters[i]
+                       bin_center_y = ycenters[j]
+                       # Adjust the annotation to center it in the cell
+                       text = plt.text(bin_center_x, bin_center_y, round(ratio[i, j], 3),
+                       ha="center", va="center", color="black", fontsize=8)
+
+                plt.colorbar(label=efficiencyText)
+                plt.clim(0.4, 1)
+                plt.xlabel(pretty_name.get(var1, var1))
+                plt.ylabel(pretty_name.get(var2, var2))
+                hep.cms.label(data=True, label="Preliminary", com=13.6)
+                plt.savefig(f'{outputdir}/{r}_Tag{tagPath}_Probe{probePath}_{var1}_vs_{var2}.png', bbox_inches='tight')
+                plt.close()
 
 
