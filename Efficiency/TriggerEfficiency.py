@@ -75,11 +75,12 @@ class npEncoder(json.JSONEncoder):
     
 
 Bins1d = dict(
+    #muProbe_pt = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,26,27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50], 
     muProbe_pt = [0,1,2,3,4,5,6,7,8,9,10,12,14,16,18,20,25,30,40,50],
-    muProbe_eta = np.linspace(-2.4, 2.4, 11),
+    muProbe_eta = np.linspace(-2.4, 2.4, 10),
     DiMu_mass = [2.9,2.95, 3, 3.05, 3.1, 3.15 ,3.2, 3.25, 3.3],
     muProbe_phi = np.linspace(-np.pi, np.pi, 10),
-    dR_muons = [0, 0.02, 0.04, 0.06, 0.08, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5,  0.7],
+    dR_muons = [0, 0.0001, 0.01, 0.02, 0.04, 0.06, 0.08, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5,  0.7],
     lxySig = [0, 0.5, 1, 1.5, 2, 2.5, 3,  3.5, 4, 4.5, 5, 5.5]
 )
 
@@ -159,18 +160,34 @@ if __name__== '__main__':
     tagPath = 'HLT_Mu8_v'
     probePath = 'HLT_Mu0_L1DoubleMu_v'
  
-    input_file = '/eos/cms/store/group/phys_bphys/trigger/Run2024/TagTuples/steam_november/Muon_RunYEAR.root'
-    runs  = ['2024C', '2024D', '2024E', '2024F', '2024G', '2024H', "2024I"]
-    Name = 'L1Efficiency_STEAM_November'
-    tagQuery = "2.9<DiMu_mass<3.3"\
-             +"& DiMu_Prob>0.005 "\
-             +"& abs(muTag_eta)<2.4 & abs(muProbe_eta)<2.4 "\
-             +"& muTag_pt>8 "\
-             +"& muTag_L1_match==1"\
-             +"& muTag_charge+muProbe_charge==0"\
-             +"& muTagGlobal==1 & muProbeGlobal==1  & muTagloose==1 & muProbeloose==1"\
+    input_file='/eos/cms/store/group/phys_bphys/trigger/Run2024/TagTuples/steam_november/Muon_RunYEAR.root'
+    #input_file = '/eos/user/v/valukash/BPHTriggerTuples/Muon_RunYEAR_dR05.root'
  
-    arrays = ['DiMu_mass', 'DiMu_Prob', 'event', '*HLT_*' , 'mu*match', '*lxy*', '*charge*', 'L1*', '*dR*'] #+ ['DiMu_Prob']
+    runs  = ['2024C', '2024D','2024E', '2024F', '2024G', '2024H', '2024I']
+    runs = ['2024G']
+    Name = 'L1Efficiency'
+    tagQuery = "2.9<DiMu_mass<3.3"\
+             +"& DiMu_Prob>0.005"\
+             +"& abs(muTag_eta)<2.4 & abs(muProbe_eta)<2.4 "\
+             +"& dR_muTag_L1 < 0.5"\
+             +"& muTagGlobal==1 & muTagloose==1 & muProbeloose==1"\
+             +"& muTag_charge+muProbe_charge==0"\
+             +"& muTag_pt>8 "\
+ 
+ 
+    """   
+    input_file = '/eos/user/v/valukash/BPHTriggerTuples/Muon_RunYEAR.root'
+    runs  = ['2023D']
+    Name = 'L1Efficiency_GM_check'
+    tagQuery = "2.9<DiMu_mass<3.3"\
+             +"& DiMu_Prob>0.005"\
+             +"& abs(muTag_eta)<2.4 & abs(muProbe_eta)<2.4 "\
+             +"& dR_muTag_L1 < 0.3"\
+             +"& dz_muons < 1.0" \
+             +"& muTag_charge+muProbe_charge==0" \
+             +"& muTagmedium==1 & muProbemedium==1"\
+    """
+    arrays = ['DiMu_mass', 'DiMu_Prob', 'dz_muons','event', '*HLT_*' , 'mu*match', '*lxy*', '*charge*', 'L1*', '*dR*'] #+ ['DiMu_Prob']
     arrays+= 'muProbe_pt,muProbe_eta,muProbe_phi,muTag_pt,muTag_eta,muTag_phi,muTagloose,muTagGlobal,muProbeloose,muProbeGlobal,GoodLumi'.split(',')
     arrays+= 'L3_muProbe_pt,L3_muProbe_eta,L3_muProbe_phi,L3_muTag_pt,L3_muTag_eta,L3_muTag_phi'.split(',')
 
@@ -183,7 +200,8 @@ if __name__== '__main__':
 
 
 
-    outputdir = os.path.join('Run'+run, Name)
+    #outputdir = os.path.join('Run'+run, Name)
+    outputdir = Name
     os.makedirs(outputdir, exist_ok=True)
     data = {}
     for r in runs:
@@ -200,9 +218,9 @@ if __name__== '__main__':
         for r in runs:    
     
             h_all      = np.histogram(data[r].query(tagQuery)[var1], bins=Bins1d[var1])
-            h_all_matched      = np.histogram(data[r].query(tagQuery + ' and muTagGlobal==1 and muProbeGlobal==1  and muTagloose==1 and muProbeloose==1 ')[var1], bins=Bins1d[var1])
+            h_all_matched      = np.histogram(data[r].query(tagQuery)[var1], bins=Bins1d[var1])
             
-            h_passprob = np.histogram(data[r].query(tagQuery+f'and muProbe_matched==1 and muProbe_{probePath}==1 ')[var1], 
+            h_passprob = np.histogram(data[r].query(tagQuery+f'and dR_muProbe_L1 < 0.5 and muProbe_{probePath}==1 ')[var1], 
                                      bins=Bins1d[var1])        
  
             h_passprob_matched = np.histogram(data[r].query(tagQuery+f' and muProbe_{probePath}==1 and muTagGlobal==1 and muProbeGlobal==1  and muTagloose==1 and muProbeloose==1 ')[var1], bins=Bins1d[var1])        
