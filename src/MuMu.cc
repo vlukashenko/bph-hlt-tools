@@ -684,7 +684,7 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       // ************ l1, l2, l3 ************ 
       float dR2_muon1, dR2_muon2; 
       double dR2_threshold;
-      dR2_threshold = 0.3 * 0.3;
+      dR2_threshold = 0.5 * 0.5;
       mu1_L1_match = 0;
       mu2_L1_match = 0;
       dR_muon1_L1 = -1;
