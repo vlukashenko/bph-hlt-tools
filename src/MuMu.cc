@@ -18,7 +18,7 @@
 #include "TLorentzVector.h"
 #include "TTree.h"
 #include "TH2F.h"
-
+#include <typeinfo>
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "FWCore/Common/interface/TriggerNames.h"
 
@@ -103,7 +103,7 @@ MuMu::MuMu(const edm::ParameterSet& iConfig)
   // HLT_DMu4_3_LM(0), HLT_DMu4_LM_Displaced(0),
   
   mu1soft(0), mu2soft(0), mu1tight(0), mu2tight(0), 
-  mu1PF(0), mu2PF(0), mu1loose(0), mu2loose(0),
+  mu1PF(0), mu2PF(0), mu1loose(0), mu2loose(0), mu1medium(0), mu2medium(0),
   mu1Tracker(0), mu2Tracker(0), mu1Global(0), mu2Global(0),  
  
   // *******************************************************
@@ -167,7 +167,7 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   using namespace edm;
   using namespace reco;
   using namespace std;
-  
+   
   //*********************************
   // Get event content information
   //*********************************  
@@ -504,7 +504,7 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       cApp.calculate(mu1State, mu2State);
       if( !cApp.status() ) continue;
       float dca = fabs( cApp.distance() );	  
-      //if (dca < 0. || dca > 0.5) continue;
+      //if (dca < 0. || dca  0.5) continue;
       //cout<<" closest approach  "<<dca<<endl;
 
       // *****  end DCA for the 2 muons *********************
@@ -908,6 +908,8 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       mu2Global = iMuon2->isGlobalMuon();
       mu1loose = muon::isLooseMuon(*iMuon1);
       mu2loose = muon::isLooseMuon(*iMuon2);
+      mu1medium = muon::isMediumMuon(*iMuon1);
+      mu2medium = muon::isMediumMuon(*iMuon2);
 
       mu1C2 =  glbTrack1->normalizedChi2() ;
       mu1NHits =  glbTrack1->numberOfValidHits() ;
@@ -944,15 +946,27 @@ void MuMu::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (nB>0) {
 
     if (debug_) std::cout << " ---> L1 Tree " << std::endl;
-    for (auto itr = gmuons->begin(0); itr != gmuons->end(0); ++itr) {
+    //std::cout << "size: " << gmuons->size() << std::endl;
+    for (auto itr = gmuons->begin(0); itr != gmuons->end(0); ++itr) { 
+      //std::cout << "iterator: " << itr->pt() << std::endl;	    
+
+      //std::cout << typeid(itr->pt()).name() << std::endl;
       L1mu_pt.push_back(itr->pt());
+      //std::cout << itr->eta() << std::endl;
       L1mu_eta.push_back(itr->eta());
       L1mu_phi.push_back(itr->phi());
+      //std::cout << itr->etaAtVtx() << std::endl;
       L1mu_etaAtVtx.push_back(itr->etaAtVtx());
       L1mu_phiAtVtx.push_back(itr->phiAtVtx());
+      //std::cout << itr->hwQual() << std::endl;
       L1mu_quality.push_back(itr->hwQual());
+      //std::cout << itr->charge() << std::endl;
       L1mu_charge.push_back(itr->charge());
+
     }
+    if (debug_) std::cout << "Finished loop" << std::endl;
+    //std::cout << tree_L1muons->GetName() << std::endl;
+    //std::cout << tree_L1muons->GetListOfBranches() << std::endl;
     tree_L1muons->Fill();
 
 
@@ -1339,26 +1353,26 @@ MuMu::beginJob()
   // tree_->Branch("HLT_DMu4_3_LM",&HLT_DMu4_3_LM);
   // tree_->Branch("HLT_DMu4_LM_Displaced",&HLT_DMu4_LM_Displaced);
 
-  tree_L1muons->Branch("L1mu_pt", &L1mu_pt); 
-  tree_L1muons->Branch("L1mu_eta", &L1mu_eta);
-  tree_L1muons->Branch("L1mu_phi", &L1mu_phi);
-  tree_L1muons->Branch("L1mu_etaAtVtx", &L1mu_etaAtVtx);
-  tree_L1muons->Branch("L1mu_phiAtVtx", &L1mu_phiAtVtx);
-  tree_L1muons->Branch("L1mu_charge", &L1mu_charge);
-  tree_L1muons->Branch("L1mu_quality", &L1mu_quality);
+  tree_L1muons->Branch("L1mu_pt", &L1mu_pt, "L1mu_pt/D"); 
+  tree_L1muons->Branch("L1mu_eta", &L1mu_eta, "L1mu_eta/D");
+  tree_L1muons->Branch("L1mu_phi", &L1mu_phi, "L1mu_phi/D");
+  tree_L1muons->Branch("L1mu_etaAtVtx", &L1mu_etaAtVtx, "L1mu_etaAtVtx/D");
+  tree_L1muons->Branch("L1mu_phiAtVtx", &L1mu_phiAtVtx, "L1mu_phiAtVtx/D");
+  tree_L1muons->Branch("L1mu_charge", &L1mu_charge, "L1mu_charge/D");
+  tree_L1muons->Branch("L1mu_quality", &L1mu_quality, "L1mu_quality/D");
 
-  tree_muons->Branch("mu_pt", &mu_pt); 
-  tree_muons->Branch("mu_eta", &mu_eta);
-  tree_muons->Branch("mu_phi", &mu_phi);
-  tree_muons->Branch("mu_charge", &mu_charge);
+  tree_muons->Branch("mu_pt", &mu_pt, "mu_pt/D"); 
+  tree_muons->Branch("mu_eta", &mu_eta, "mu_eta/D");
+  tree_muons->Branch("mu_phi", &mu_phi, "mu_phi/D");
+  tree_muons->Branch("mu_charge", &mu_charge, "mu_charge/D");
   
-  tree_L2muons->Branch("L2mu_pt", &L2mu_pt); 
-  tree_L2muons->Branch("L2mu_eta", &L2mu_eta);
-  tree_L2muons->Branch("L2mu_phi", &L2mu_phi);
+  tree_L2muons->Branch("L2mu_pt", &L2mu_pt, "L2mu_pt/D"); 
+  tree_L2muons->Branch("L2mu_eta", &L2mu_eta, "L2mu_eta/D");
+  tree_L2muons->Branch("L2mu_phi", &L2mu_phi, "L2mu_phi/D");
   
-  tree_L3muons->Branch("L3mu_pt", &L3mu_pt); 
-  tree_L3muons->Branch("L3mu_eta", &L3mu_eta);
-  tree_L3muons->Branch("L3mu_phi", &L3mu_phi);
+  tree_L3muons->Branch("L3mu_pt", &L3mu_pt, "L3mu_pt/D"); 
+  tree_L3muons->Branch("L3mu_eta", &L3mu_eta, "L3mu_eta/D");
+  tree_L3muons->Branch("L3mu_phi", &L3mu_phi, "L3mu_phi/D");
 
   tree_->Branch("mu1soft",&mu1soft);
   tree_->Branch("mu2soft",&mu2soft);
@@ -1368,6 +1382,9 @@ MuMu::beginJob()
   tree_->Branch("mu2PF",&mu2PF);
   tree_->Branch("mu1loose",&mu1loose);
   tree_->Branch("mu2loose",&mu2loose);
+  tree_->Branch("mu1medium",&mu1medium);
+  tree_->Branch("mu2medium",&mu2medium);
+ 
   tree_->Branch("mu1Tracker",&mu1Tracker);
   tree_->Branch("mu2Tracker",&mu2Tracker);
   tree_->Branch("mu1Global",&mu1Global);

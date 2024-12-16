@@ -206,7 +206,7 @@ private:
   // int         HLT_DMu4_LM_Displaced;//HLT_DoubleMu4_LowMass_Displaced
 
   bool       mu1soft, mu2soft, mu1tight, mu2tight;  
-  bool       mu1PF, mu2PF, mu1loose, mu2loose;  
+  bool       mu1PF, mu2PF, mu1loose, mu2loose, mu1medium, mu2medium;
   bool       mu1Tracker, mu2Tracker, mu1Global, mu2Global;  
  
   // *************************************
